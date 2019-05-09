@@ -17,11 +17,26 @@ import org.neuroph.nnet.learning.BackPropagation;
 import org.neuroph.util.TransferFunctionType;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 public class Bang extends ApplicationAdapter {
 
+	private long start = 0;
+	private long finish = 0;
+	private float timeElapsed = 0;
+
 	@Override
 	public void create() {
+		start = System.currentTimeMillis();
+
+		TestNeuralNetworkPML_XOR();
+
+		finish = System.currentTimeMillis();
+		timeElapsed = ((finish - start));
+		System.out.printf(Locale.US, "\nTime Elapsed:   %03.2f (%f)%n", (timeElapsed / 1000), timeElapsed );
+	}
+
+	private void TestNeuralNetworkPML_XOR(){
 		// create training set (logical XOR function)
 		DataSet trainingSet = new DataSet(2, 1);
 		trainingSet.addRow(new DataSetRow(new double[]{0, 0}, new double[]{0}));
@@ -32,19 +47,28 @@ public class Bang extends ApplicationAdapter {
 		// create multi layer perceptron
 		MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, 2, 3, 1);
 		myMlPerceptron.setLearningRule(new BackPropagation());
+
 		// learn the training set
 		myMlPerceptron.learn(trainingSet);
-		// test perceptron
-		System.out.println("Testing trained neural network");
-		testNeuralNetwork(myMlPerceptron, trainingSet);
 
-		// save trained neural network
-		myMlPerceptron.save("myMlPerceptron.nnet");
+        // save trained neural network
+		if(Gdx.graphics.getWidth() > (2246/2))
+			// Android
+		    myMlPerceptron.save("/data/data/com.bang/files/myMlPerceptron.nnet");
+		else
+			// Desktop
+            myMlPerceptron.save("myMlPerceptron.nnet");
 
 		System.out.println();
 
 		// load saved neural network
-		NeuralNetwork loadedMlPerceptron = NeuralNetwork.createFromFile("myMlPerceptron.nnet");
+        NeuralNetwork loadedMlPerceptron;
+        if(Gdx.graphics.getWidth() > (2246/2))
+        	// Android
+		    loadedMlPerceptron = NeuralNetwork.createFromFile("/data/data/com.bang/files/myMlPerceptron.nnet");
+        else
+        	// Desktop
+            loadedMlPerceptron = NeuralNetwork.createFromFile("myMlPerceptron.nnet");
 
 		// test loaded neural network
 		System.out.println("Testing loaded neural network");
@@ -58,12 +82,15 @@ public class Bang extends ApplicationAdapter {
 
 	public static void testNeuralNetwork(NeuralNetwork nnet, DataSet testSet) {
 
+		int i = 0;
 		for(DataSetRow dataRow : testSet.getRows()) {
 			nnet.setInput(dataRow.getInput());
 			nnet.calculate();
 			double[ ] networkOutput = nnet.getOutput();
 			System.out.print("Input: " + Arrays.toString(dataRow.getInput()) );
+			System.out.print(" Desired: " + Arrays.toString(testSet.getRows().get(i).getDesiredOutput()) );
 			System.out.println(" Output: " + Arrays.toString(networkOutput) );
+			i++;
 		}
 
 	}
