@@ -26,8 +26,6 @@ public class Bang extends ApplicationAdapter {
 	private long finish = 0;
 	private float timeElapsed = 0;
 
-
-
 	@Override
 	public void create() {
 
