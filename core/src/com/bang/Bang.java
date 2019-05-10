@@ -57,10 +57,10 @@ public class Bang extends ApplicationAdapter {
 	float power = 2;
 	float target = 100;
 	float shotW = 50;
+	int count = -1;
 	boolean shot = true;
 	double[] arrAngles = new double[waveTotal];
 	double[] arrPowers = new double[waveTotal];
-
 	double tx = 0;
 	double ty = 0;
 
@@ -350,8 +350,9 @@ public class Bang extends ApplicationAdapter {
 
 		System.out.println();
 
-		if(wave == waveTotal - 1){
+		if(wave < waveTotal){
 			status = "Learning...";
+			Shot(shotW);
 		}
 
 		if(wave == waveTotal && shot) {
@@ -398,9 +399,9 @@ public class Bang extends ApplicationAdapter {
 			shot = false;
 
 			status = "Outputs: " + Arrays.toString(TestOutputs)+ ", Time: " + (timeElapsed / 1000 / 60) + " Epochs = " + iterations;
-		}
 
-		Shot(shotW);
+			count = 0;
+		}
 	}
 
 	@Override
@@ -430,6 +431,15 @@ public class Bang extends ApplicationAdapter {
 
 				// Elevate launcher
 				ElevateLauncher();
+			}
+		}
+
+		if(count > -1){
+			count++;
+
+			if(count > 180){
+				count = -1;
+				Shot(shotW);
 			}
 		}
 
