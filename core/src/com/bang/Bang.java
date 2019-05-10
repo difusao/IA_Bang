@@ -2,6 +2,8 @@ package com.bang;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -16,7 +18,6 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.nn.NetworkUtils;
 import com.nn.NeurophStudio;
 
@@ -29,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-public class Bang extends ApplicationAdapter {
+public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	// Real World
 	public static final int PPM = 30;
@@ -56,7 +57,12 @@ public class Bang extends ApplicationAdapter {
 	float angle = 18;
 	float power = 2;
 	float target = 100;
-	float shotW = 50;
+	float weight = 50;
+	float elevateX = 10;
+	float elevateY = 10;
+
+	float maxhight = 0;
+
 	int count = -1;
 	boolean shot = true;
 	double[] arrAngles = new double[waveTotal];
@@ -88,7 +94,7 @@ public class Bang extends ApplicationAdapter {
 	String status;
 
 	// NeuralNetwork
-	DataSet trainingSet = new DataSet(1, 2);
+	DataSet trainingSet = new DataSet(2, 2);
 	String FileDataset = "DataSet.tset";
 	String FileNetwork = "NewNeuralNetwork";
 	String pathDataSet = "data/";
@@ -96,66 +102,6 @@ public class Bang extends ApplicationAdapter {
 
 	NeurophStudio rna;
 	NetworkUtils nnu;
-
-	@Override
-	public void create() {
-		WIDTH = Gdx.graphics.getWidth();
-		HEIGHT = Gdx.graphics.getHeight();
-
-        box2DCamera = new OrthographicCamera();
-
-        if(WIDTH == 1123) {
-        	// Desktop
-            box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
-            box2DCamera.position.set(55, 25, 0);
-
-			pathDataSet = "data/";
-			pathNetwork = "data/";
-
-			target = 109;
-        }else{
-        	// Smartphone
-            box2DCamera.setToOrtho(false, (WIDTH) / (PPM) + 10, (HEIGHT) / (PPM) + 10 );
-            box2DCamera.position.set(PPM*1.25f, PPM / 2 + 5, 0);
-
-			pathDataSet = "/data/data/com.bang/files/";
-			pathNetwork = "/data/data/com.bang/files/";
-
-			target = 75;
-        }
-
-		rna = new NeurophStudio(FileDataset, FileNetwork, pathDataSet, pathNetwork);
-		nnu = new NetworkUtils();
-
-        box2DCamera.update();
-        world = new World(new Vector2(0,-9.8f),true);
-        debugRenderer = new Box2DDebugRenderer();
-
-		batch = new SpriteBatch();
-
-		font1 = new BitmapFont(Gdx.files.internal("fonts/verdana20.fnt"));
-		font1.setColor(Color.WHITE);
-		font1.getData().setScale(1f, 1f);
-
-        // Default values
-		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(18, 30);
-			arrPowers[i] = nnu.RamdomValues(2.0f, 6);
-		}
-
-		angle = (float)arrAngles[0];
-		power = (float)arrPowers[0];
-
-		// Objects
-		BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
-		bodyTarget(1.0f,1.0f, target,-5.0f, BodyDef.BodyType.StaticBody);
-		BodyLauncher(1.0f, 3.0f, 0, 0, angle);
-
-		status = "Treinnering...";
-
-		// Start Shot
-		Shot(shotW);
-	}
 
 	@Override
 	public void pause() {
@@ -204,7 +150,7 @@ public class Bang extends ApplicationAdapter {
 		shape.dispose();
 	}
 
-	private void Shot(float weight){
+	private void Shot(float x, float y, float weight){
 		if(wave < waveTotal) {
 			if(bodyObj != null) {
 				world.destroyBody(bodyObj);
@@ -212,7 +158,7 @@ public class Bang extends ApplicationAdapter {
 			}
 
 			if(collide) {
-				BodyShot(1f, 1f, (float) (tx), (float) (ty), (float) (tx) * (power),(float) (ty) * (power), weight);
+				BodyShot(1f, 1f, x, y, (float) (tx) * (power),(float) (ty) * (power), weight);
 				collide = false;
 			}
 		}
@@ -306,42 +252,44 @@ public class Bang extends ApplicationAdapter {
 		shape.dispose();
 	}
 
-	public float getAngle(double x, double y){
-		double arctan = Math.atan(x / y);
-		float ang = (360 * (float)arctan) / (2 * (float)Math.PI);
-
-		return ang;
-	}
-
-	private void ElevateLauncher() {
-		int x = 0;
-		int y = 0;
+	private void ElevateLauncher( float x, float y) {
 
 		// Rotation
-		tx = x + ( 5 * Math.sin( ( (double) angle) / 10) );
-		ty = y - ( 5 * Math.cos( ( (double) angle) / 10) );
+		power = 20;
+		tx =  Math.sin(angle);
+		ty =  Math.cos(angle);
 
 		// Angle
 		float arctan = (float)Math.atan(tx / ty) * (-1);
 		//ang = getAngle(tx, ty);
 
 		// Elevate Laucher
-		bodyLnchr.setTransform(0, 0, arctan);
+		bodyLnchr.setTransform(x, y, arctan);
 	}
 
-	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW) {
+	private void PnelInfo(){
+		batch.begin();
+		font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
+		font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
+		font1.draw(batch, "Target: " + target, 10, HEIGHT - 70);
+		font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
+		font1.draw(batch, "Wave: " + (wave) + "/" + waveTotal, 10, HEIGHT - 130);
+		batch.end();
+	}
+
+	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
 
 		// Meural Network
-		String[] inputsLabel = new String[]{"Target"};
-		String[] outputsLabel = new String[]{"Angle", "Power"};
-		double[] inputs = new double[]{ (inObjDown / 100)};
+		String[] inputsLabel = new String[]{ "Target", "Mass" };
+		String[] outputsLabel = new String[]{ "Angle", "Power" };
+		double[] inputs = new double[]{ (inObjDown / 100), (inShotW / 100) };
 		double[] outputs = new double[]{ (inAngle / 100), (inPower / 10) };
 
 		// DataSet
 		trainingSet.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
-		System.out.print((wave - 1) + " Inputs: ");
+		System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
 		for(int i=0; i<inputs.length; i++)
 			System.out.printf(Locale.US,"%012.8f ", inputs[i]);
 
@@ -352,7 +300,7 @@ public class Bang extends ApplicationAdapter {
 
 		if(wave < waveTotal){
 			status = "Learning...";
-			Shot(shotW);
+			Shot(elevateX, elevateY, weight);
 		}
 
 		if(wave == waveTotal && shot) {
@@ -368,10 +316,10 @@ public class Bang extends ApplicationAdapter {
 			int iterations = rna.PerceptronMLSave(
 					TransferFunctionType.SIGMOID,
 					trainingSet,
-					new int[]{inputs.length, 10, 10, 10, outputs.length},
+					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.001f,
+					0.01f,
 					0.2f,
 					0.7f,
 					100000000,
@@ -379,20 +327,21 @@ public class Bang extends ApplicationAdapter {
 					outputsLabel);
 
 			System.out.println("Iterações: " + iterations);
+			rna.TestNetworkMl(FileNetwork + ".nnet", trainingSet);
 
 			finish = System.currentTimeMillis();
 			timeElapsed = ((finish - start));
-			System.out.printf(Locale.US, "\nTime Elapsed:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
+			System.out.printf(Locale.US, "Time Elapsed:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
 
-			target = new NetworkUtils().RamdomValues(20, target);
+			target = new NetworkUtils().RamdomValues(50, target);
 
 			// Clear Test
 			wave = 0;
 
 			// Launcher
-			trainingSet.clear();;
-			trainingSet.addRow(new DataSetRow(new double[]{ (target / 100) }, new double[]{ 0, 0 }));
-			double[] TestOutputs = rna.TestNetworkMl(FileNetwork + ".nnet", trainingSet);
+			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (target / 100), (weight / 100) });
+			System.out.println("Outputs: " + Arrays.toString(TestOutputs));
+
 			angle = (float) TestOutputs[0] * 100;
 			power = (float) TestOutputs[1] * 10;
 
@@ -413,6 +362,12 @@ public class Bang extends ApplicationAdapter {
 		// Position target
 		bodyTarget.setTransform(target, 0.0f, 0);
 
+		if(bodyObj != null && bodyObj.getPosition().y > maxhight)
+			maxhight = bodyObj.getPosition().y;
+
+		// Elevate launcher
+		ElevateLauncher(0, 0 );
+
 		if ((CollisionBox("ground", "shot") || CollisionBox("alvo", "shot")) && shot) {
 			if (!collide) {
 				wave++;
@@ -425,21 +380,21 @@ public class Bang extends ApplicationAdapter {
 				float inObjDown = bodyObj.getPosition().x;
 				float inPower = power;
 				float inTarget = target;
-				float inWeight = shotW;
+				float inWeight = weight;
+				float inHight = maxhight;
 
-				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight);
-
-				// Elevate launcher
-				ElevateLauncher();
+				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
 		}
 
 		if(count > -1){
 			count++;
+			System.out.print(".");
 
-			if(count > 180){
+			if(count > 100){
 				count = -1;
-				Shot(shotW);
+				System.out.println();
+				Shot(elevateX, elevateY, weight);
 			}
 		}
 
@@ -448,13 +403,116 @@ public class Bang extends ApplicationAdapter {
 		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 	}
 
-	private void PnelInfo(){
-		batch.begin();
-		font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
-		font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
-		font1.draw(batch, "Target: " + target, 10, HEIGHT - 70);
-		font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
-		font1.draw(batch, "Wave: " + (wave+1) + " / " + waveTotal, 10, HEIGHT - 130);
-		batch.end();
+	@Override
+	public void create() {
+		WIDTH = Gdx.graphics.getWidth();
+		HEIGHT = Gdx.graphics.getHeight();
+
+		box2DCamera = new OrthographicCamera();
+
+		if(WIDTH == 1123) {
+			// Desktop
+			box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
+			box2DCamera.position.set(55, 25, 0);
+
+			pathDataSet = "NeurophProject_Bang/Training Sets/";
+			pathNetwork = "NeurophProject_Bang/Neural Networks/";
+
+			target = 109;
+		}else{
+			// Smartphone
+			box2DCamera.setToOrtho(false, (WIDTH) / (PPM) + 10, (HEIGHT) / (PPM) + 10 );
+			box2DCamera.position.set(PPM*1.25f, PPM / 2 + 5, 0);
+
+			pathDataSet = "/data/data/com.bang/files/";
+			pathNetwork = "/data/data/com.bang/files/";
+
+			target = 75;
+		}
+
+		rna = new NeurophStudio(FileDataset, FileNetwork, pathDataSet, pathNetwork);
+		nnu = new NetworkUtils();
+
+		box2DCamera.update();
+		world = new World(new Vector2(0,-9.8f),true);
+		debugRenderer = new Box2DDebugRenderer();
+
+		Gdx.input.setInputProcessor(this);
+
+		batch = new SpriteBatch();
+
+		font1 = new BitmapFont(Gdx.files.internal("fonts/verdana20.fnt"));
+		font1.setColor(Color.WHITE);
+		font1.getData().setScale(1f, 1f);
+
+		// Default values
+		for(int i=0; i<waveTotal; i++) {
+			arrAngles[i] = nnu.RamdomValues(18, 25);
+			arrPowers[i] = nnu.RamdomValues(2.0f, 6);
+		}
+
+		angle = (float)arrAngles[0];
+		power = (float)arrPowers[0];
+
+		// Objects
+		BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
+		bodyTarget(1.0f,1.0f, target,-5.0f, BodyDef.BodyType.StaticBody);
+		BodyLauncher(1.0f, 3.0f, 0, 10, angle);
+
+		// Elevate launcher
+		ElevateLauncher(0, 10);
+
+		status = "Treinnering...";
+
+		// Start Shot
+		//Shot(0, elevateY, weight);
+
+		wave++;
 	}
+
+	@Override
+	public boolean keyDown(int keycode) {
+		System.out.println(angle);
+		return false;
+	}
+
+	@Override
+	public boolean keyUp(int keycode) {
+		return false;
+	}
+
+	@Override
+	public boolean keyTyped(char character) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		if(button == Input.Buttons.LEFT){
+			Shot(elevateX, elevateY, weight);
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(int amount) {
+		return false;
+	}
+
 }

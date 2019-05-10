@@ -100,6 +100,16 @@ public class NeurophStudio {
         return lr.getCurrentIteration();
     }
 
+    public double[] Test(String FileNetwork, double[] input){
+        NeuralNetwork loadedPerceptron = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        loadedPerceptron.setInput(input);
+        loadedPerceptron.calculate();
+        double[] networkOutput = new double[input.length];
+        networkOutput = loadedPerceptron.getOutput();
+
+        return networkOutput;
+    }
+
     public double[] TestNetworkMl(String FileNetwork, DataSet trainingSet){
         NeuralNetwork loadedPerceptron = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
 
