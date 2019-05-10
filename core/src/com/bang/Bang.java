@@ -2,9 +2,11 @@ package com.bang;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -14,19 +16,7 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Slider;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.nn.NetworkUtils;
 import com.nn.NeurophStudio;
 
@@ -35,13 +25,11 @@ import org.neuroph.core.data.DataSetRow;
 import org.neuroph.util.TransferFunctionType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 public class Bang extends ApplicationAdapter {
-
-	int WIDTH;
-	int HEIGHT;
 
 	// Real World
 	public static final int PPM = 30;
@@ -52,48 +40,41 @@ public class Bang extends ApplicationAdapter {
 	Box2DDebugRenderer debugRenderer;
 	World world;
 
+	int WIDTH;
+	int HEIGHT;
+
 	// Time Elapsed
 	long start = 0;
 	long finish = 0;
 	float timeElapsed = 0;
 
 	// AG
-	int waveTotal = 5;
+	int waveTotal = 10;
 	int wave = 0;
 
 	// Objects
-	float angle = 15.708f;
-	float power = 0.01f;
-	float target = 130.0f;
+	float angle = 18;
+	float power = 2;
+	float target = 100;
 	float shotW = 50;
-	boolean shot = false;
+	boolean shot = true;
 	double[] arrAngles = new double[waveTotal];
 	double[] arrPowers = new double[waveTotal];
 
-	// Inputs NN
-	float inAngle;
-	float inPower;
-	float inObjDown;
-	float inTarget;
-
 	double tx = 0;
 	double ty = 0;
-	float ang = 18;
 
 	// Objects
 	BodyDef bodyGroundDef;
 	BodyDef bodyTargetDef;
 	BodyDef bodyObjDef;
 	BodyDef bodyLauncherDef;
-
 	Body bodyGnd;
 	Body bodyObj;
 	Body bodyLnchr;
 	Body bodyTarget;
-
 	FixtureDef fixtureBallDef;
 	FixtureDef fixtureBoxDef;
-
 	Fixture fixtureBall;
 	Fixture fixtureBox;
 	Fixture fixtureTank;
@@ -102,15 +83,9 @@ public class Bang extends ApplicationAdapter {
 	List posMark = new ArrayList();
 
 	// Form
-	Stage stage;
-	Slider sldAngle;
-	Slider sldPower;
-	Slider sldTarget;
-	CheckBox chkAuto;
-
-	TextField txtAngleValue;
-	TextField txtPowerValue;
-	TextField txtTargetValue;
+	SpriteBatch batch;
+	BitmapFont font1;
+	String status;
 
 	// NeuralNetwork
 	DataSet trainingSet = new DataSet(1, 2);
@@ -119,13 +94,8 @@ public class Bang extends ApplicationAdapter {
 	String pathDataSet = "data/";
 	String pathNetwork = "data/";
 
-	NeurophStudio rna = new NeurophStudio(FileDataset, FileNetwork, pathDataSet, pathNetwork);
-	NetworkUtils nnu = new NetworkUtils();
-
-	@Override
-	public void resize(int width, int height) {
-
-	}
+	NeurophStudio rna;
+	NetworkUtils nnu;
 
 	@Override
 	public void create() {
@@ -135,82 +105,56 @@ public class Bang extends ApplicationAdapter {
         box2DCamera = new OrthographicCamera();
 
         if(WIDTH == 1123) {
-            box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 4), (HEIGHT) / (PPM / 4) );
-            box2DCamera.position.set(70, 30, 0);
+        	// Desktop
+            box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
+            box2DCamera.position.set(55, 25, 0);
 
-			pathDataSet = "";
-			pathNetwork = "";
+			pathDataSet = "data/";
+			pathNetwork = "data/";
+
+			target = 109;
         }else{
+        	// Smartphone
             box2DCamera.setToOrtho(false, (WIDTH) / (PPM) + 10, (HEIGHT) / (PPM) + 10 );
-            box2DCamera.position.set(PPM, PPM / 2, 0);
+            box2DCamera.position.set(PPM*1.25f, PPM / 2 + 5, 0);
 
 			pathDataSet = "/data/data/com.bang/files/";
 			pathNetwork = "/data/data/com.bang/files/";
+
+			target = 75;
         }
+
+		rna = new NeurophStudio(FileDataset, FileNetwork, pathDataSet, pathNetwork);
+		nnu = new NetworkUtils();
 
         box2DCamera.update();
         world = new World(new Vector2(0,-9.8f),true);
         debugRenderer = new Box2DDebugRenderer();
 
+		batch = new SpriteBatch();
+
+		font1 = new BitmapFont(Gdx.files.internal("fonts/verdana20.fnt"));
+		font1.setColor(Color.WHITE);
+		font1.getData().setScale(1f, 1f);
+
         // Default values
 		for(int i=0; i<waveTotal; i++) {
-			//arrAngles[i] = 16.0f + (i * 1.4f);
-			arrAngles[i] = nnu.RamdomValues(20, 30);
-			//arrAngles[i] = 24.000f;
-
-			//arrPowers[i] = 1.0f * (i * 1.0f);
-			arrPowers[i] = nnu.RamdomValues(2.0f, 8);
-			//arrPowers[i] = 02.0900f;
+			arrAngles[i] = nnu.RamdomValues(18, 30);
+			arrPowers[i] = nnu.RamdomValues(2.0f, 6);
 		}
 
-		stage = new Stage();
+		angle = (float)arrAngles[0];
+		power = (float)arrPowers[0];
 
-		ShowPanelOptions(10, this.HEIGHT - 150,  300, 100);
+		// Objects
 		BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
 		bodyTarget(1.0f,1.0f, target,-5.0f, BodyDef.BodyType.StaticBody);
 		BodyLauncher(1.0f, 3.0f, 0, 0, angle);
 
+		status = "Treinnering...";
+
 		// Start Shot
 		Shot(shotW);
-	}
-
-	@Override
-	public void render() {
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		debugRenderer.render(world, box2DCamera.combined);
-		box2DCamera.update();
-
-		stage.draw();
-
-		// Elevate laucher
-		ElevateLauncher();
-
-		// Position target
-		bodyTarget.setTransform(target, 0.0f, 0);
-
-		if ((CollisionBox("ground", "shot") || CollisionBox("alvo", "shot"))) {
-			if (!collide) {
-				wave++;
-				collide = true;
-				inObjDown = bodyObj.getPosition().x;
-				posMark.add(inObjDown);
-
-				createAlgoritm7(inAngle, power, inObjDown, inTarget, shotW);
-
-				if (chkAuto.isChecked() && wave < waveTotal) {
-					inAngle = (float) arrAngles[wave];
-					inPower = (float) arrPowers[wave];
-
-					sldAngle.setValue(inAngle);
-					sldPower.setValue(inPower);
-
-					Shot(shotW);
-				}
-			}
-		}
-
-
-		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 	}
 
 	@Override
@@ -225,9 +169,13 @@ public class Bang extends ApplicationAdapter {
 
 	@Override
 	public void dispose() {
-		//batch.dispose();
-		//font1.dispose();
-		//shapeRenderer.dispose();
+		batch.dispose();
+		font1.dispose();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+
 	}
 
 	private void BodyShot(float w, float h, float x, float y, float inpulseX, float inpulseY, float weight) {
@@ -290,182 +238,6 @@ public class Bang extends ApplicationAdapter {
 		return touch;
 	}
 
-	private void ShowPanelOptions(float x, float y, float w, float h) {
-		Skin skin = new Skin(Gdx.files.internal("themes/default/skin/uiskin.json"));
-
-		final Label lblAngle = new Label("Angle:", skin);
-		txtAngleValue = new TextField(String.format(Locale.US,"%06.3f°", ang), skin);
-
-		final Label lblPower = new Label("Power:", skin);
-		txtPowerValue = new TextField(String.format(Locale.US,"%06.3f°", power), skin);
-
-		final Label lblTarget = new Label("Target:", skin);
-		txtTargetValue = new TextField(String.format(Locale.US,"%06.3f°", target), skin);
-		txtTargetValue.setText(String.format(Locale.US, "%06.3f°", target));
-
-		final Label lblAuto = new Label("Auto:", skin);
-
-		final Label lblNull = new Label(null, skin);
-
-		sldAngle = new Slider(16.0f, 30.0f, 0.01f, false, skin);
-		sldAngle.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				angle = sldAngle.getValue();
-				txtAngleValue.setText(String.format(Locale.US,"%06.3f°", angle));
-			}
-		});
-
-		sldPower = new Slider(0.50f, 10.0f, 0.01f, false, skin);
-		sldPower.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				power = sldPower.getValue();
-				txtPowerValue.setText(String.format(Locale.US, "%06.3f°", power));
-			}
-		});
-
-		sldTarget = new Slider(10.00f, 140.0f, 1.0f, false, skin);
-		sldTarget.setValue(target);
-		sldTarget.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				target = sldTarget.getValue();
-				txtTargetValue.setText(String.format(Locale.US, "%06.3f°", target));
-			}
-		});
-
-		txtAngleValue.addListener(new FocusListener(){
-			public void keyboardFocusChanged(FocusListener.FocusEvent event, Actor actor, boolean focused) {
-				if(!focused) {
-					sldAngle.setValue(Float.parseFloat(txtAngleValue.getText()));
-				}
-			}
-		});
-
-		txtAngleValue.addListener(new InputListener() {
-			@Override
-			public boolean keyUp(InputEvent event, int keycode) {
-				if (keycode == Input.Keys.ENTER) {
-					sldAngle.setValue(Float.parseFloat(txtAngleValue.getText()));
-					stage.setKeyboardFocus(txtPowerValue);
-					txtPowerValue.selectAll();
-				}
-				return false;
-			}
-		});
-
-		txtPowerValue.addListener(new FocusListener(){
-			public void keyboardFocusChanged(FocusListener.FocusEvent event, Actor actor, boolean focused) {
-				if(!focused) {
-					sldPower.setValue(Float.parseFloat(txtPowerValue.getText()));
-				}
-			}
-		});
-
-		txtPowerValue.addListener(new InputListener() {
-			@Override
-			public boolean keyUp(InputEvent event, int keycode) {
-				if (keycode == Input.Keys.ENTER) {
-					sldPower.setValue(Float.parseFloat(txtPowerValue.getText()));
-					stage.setKeyboardFocus(txtTargetValue);
-					txtTargetValue.selectAll();
-				}
-				return false;
-			}
-		});
-
-		txtTargetValue.addListener(new FocusListener(){
-			public void keyboardFocusChanged(FocusListener.FocusEvent event, Actor actor, boolean focused) {
-				if(!focused) {
-					sldTarget.setValue(Float.parseFloat(txtTargetValue.getText()));
-					target = sldTarget.getValue();
-				}
-			}
-		});
-
-
-		txtTargetValue.addListener(new InputListener() {
-			@Override
-			public boolean keyUp(InputEvent event, int keycode) {
-				if (keycode == Input.Keys.ENTER) {
-					sldTarget.setValue(Float.parseFloat(txtTargetValue.getText()));
-					target = sldTarget.getValue();
-					stage.setKeyboardFocus(txtAngleValue);
-					txtAngleValue.selectAll();
-				}
-				return false;
-			}
-		});
-
-		chkAuto = new CheckBox(null, skin);
-		chkAuto.setChecked(true);
-
-		Table table = new Table();
-		//table.debug();
-		stage.addActor(table);
-		table.setSize(w, h);
-		table.setPosition(x, y);
-
-		table.add(lblAngle).width(80).height(30);
-		table.add(sldAngle).width(100);
-		table.add(txtAngleValue).width(100);
-		table.row();
-
-		table.add(lblPower).width(80).height(30);
-		table.add(sldPower).width(100);
-		table.add(txtPowerValue).width(100);
-		table.row();
-
-		table.add(lblTarget).width(80).height(30);
-		table.add(sldTarget).width(100);
-		table.add(txtTargetValue).width(100);
-		table.row();
-
-		table.add(lblAuto).width(80).height(30);
-		table.add(chkAuto).width(100);
-		table.add().width(100);
-		table.row();
-
-		table.add(lblNull).colspan(3).height(30);
-		table.row();
-
-		TextButton button1 = new TextButton("Launch", skin);
-		button1.addListener(new InputListener() {
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-				Shot(shotW);
-				return false;
-			}
-		});
-
-		TextButton button2 = new TextButton("Restart", skin);
-		button2.addListener(new InputListener() {
-			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-
-				wave = 0;
-				posMark.clear();
-				//listaShots.clear();
-				trainingSet.clear();
-
-				return false;
-			}
-		});
-
-		table.add(button1);
-		table.add(button2).colspan(2).height(30);
-
-		//inAngle = (float)arrAngles[wave];
-		//inPower = (float)arrPowers[wave];
-
-		//sldAngle.setValue(inAngle);
-		//sldPower.setValue(inPower);
-
-		stage.setKeyboardFocus(txtAngleValue);
-		txtAngleValue.selectAll();
-
-		Gdx.input.setInputProcessor(stage);
-	}
-
 	private void BodyLauncher(float w, float h, float x, float y, float ang) {
 
 		bodyLauncherDef = new BodyDef();
@@ -480,7 +252,7 @@ public class Bang extends ApplicationAdapter {
 		bodyLnchr = world.createBody(bodyLauncherDef);
 
 		//bodyLnchr.setUserData(this);
-		//bodyLnchr.setTransform(10, 10, 0);
+		bodyLnchr.setTransform(x, y, ang);
 
 		PolygonShape shape1 = new PolygonShape();
 		shape1.setAsBox(w, h);
@@ -551,19 +323,21 @@ public class Bang extends ApplicationAdapter {
 
 		// Angle
 		float arctan = (float)Math.atan(tx / ty) * (-1);
-		ang = getAngle(tx, ty);
+		//ang = getAngle(tx, ty);
 
 		// Elevate Laucher
 		bodyLnchr.setTransform(0, 0, arctan);
 	}
 
-	private void createAlgoritm7(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW) {
+	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW) {
+
 		// Meural Network
 		String[] inputsLabel = new String[]{"Target"};
 		String[] outputsLabel = new String[]{"Angle", "Power"};
 		double[] inputs = new double[]{ (inObjDown / 100)};
 		double[] outputs = new double[]{ (inAngle / 100), (inPower / 10) };
 
+		// DataSet
 		trainingSet.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
@@ -576,25 +350,27 @@ public class Bang extends ApplicationAdapter {
 
 		System.out.println();
 
-		if(wave == waveTotal && chkAuto.isChecked()) {
+		if(wave == waveTotal - 1){
+			status = "Learning...";
+		}
 
-			// Disable check Auto
-			chkAuto.setChecked(false);
+		if(wave == waveTotal && shot) {
 
-			//Clear NeuronNetwork and Dataset
+			// Clear NeuronNetwork and Dataset
 			new NetworkUtils().DeleteFileNN(pathDataSet + FileDataset);
 			new NetworkUtils().DeleteFileNN(pathNetwork + ".nnet" + FileNetwork);
 
 			start = System.currentTimeMillis();
 
 			System.out.print("\nTreinando... ");
+
 			int iterations = rna.PerceptronMLSave(
 					TransferFunctionType.SIGMOID,
 					trainingSet,
 					new int[]{inputs.length, 10, 10, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.00001f,
+					0.001f,
 					0.2f,
 					0.7f,
 					100000000,
@@ -607,11 +383,10 @@ public class Bang extends ApplicationAdapter {
 			timeElapsed = ((finish - start));
 			System.out.printf(Locale.US, "\nTime Elapsed:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
 
-			target = new NetworkUtils().RamdomValues(20, 120);
+			target = new NetworkUtils().RamdomValues(20, target);
 
 			// Clear Test
 			wave = 0;
-			posMark.clear();
 
 			// Launcher
 			trainingSet.clear();;
@@ -620,15 +395,56 @@ public class Bang extends ApplicationAdapter {
 			angle = (float) TestOutputs[0] * 100;
 			power = (float) TestOutputs[1] * 10;
 
-			inAngle = angle;
-			inPower = power;
-			inTarget = target;
+			shot = false;
 
-			sldAngle.setValue((float)inAngle);
-			sldPower.setValue((float)inPower);
-			sldTarget.setValue((float)inTarget);
-
-			shot = true;
+			status = "Outputs: " + Arrays.toString(TestOutputs)+ ", Time: " + (timeElapsed / 1000 / 60) + " Epochs = " + iterations;
 		}
+
+		Shot(shotW);
+	}
+
+	@Override
+	public void render() {
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		debugRenderer.render(world, box2DCamera.combined);
+		box2DCamera.update();
+
+		// Position target
+		bodyTarget.setTransform(target, 0.0f, 0);
+
+		if ((CollisionBox("ground", "shot") || CollisionBox("alvo", "shot")) && shot) {
+			if (!collide) {
+				wave++;
+				collide = true;
+
+				angle = (float)arrAngles[wave-1];
+				power = (float)arrPowers[wave-1];
+
+				float inAngle = angle;
+				float inObjDown = bodyObj.getPosition().x;
+				float inPower = power;
+				float inTarget = target;
+				float inWeight = shotW;
+
+				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight);
+
+				// Elevate launcher
+				ElevateLauncher();
+			}
+		}
+
+		PnelInfo();
+
+		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+	}
+
+	private void PnelInfo(){
+		batch.begin();
+		font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
+		font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
+		font1.draw(batch, "Target: " + target, 10, HEIGHT - 70);
+		font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
+		font1.draw(batch, "Wave: " + (wave+1) + " / " + waveTotal, 10, HEIGHT - 130);
+		batch.end();
 	}
 }
