@@ -3,6 +3,7 @@ package com.bang.desktop;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.bang.Bang;
+import com.bang.Giro;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
@@ -14,5 +15,6 @@ public class DesktopLauncher {
 		config.y = 0;
 
 		new LwjglApplication(new Bang(), config);
+		//new LwjglApplication(new Giro(), config);
 	}
 }

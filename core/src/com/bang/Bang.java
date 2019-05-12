@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -54,8 +55,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	int wave = 0;
 
 	// Objects
-	float angle = 18;
-	float power = 2;
+	float angle = 0;
+	float LauncherX = 5;
+	float LauncherY = 2;
+	float power = 30;
 	float target = 100;
 	float weight = 50;
 	float elevateX = 10;
@@ -69,16 +72,22 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	double[] arrPowers = new double[waveTotal];
 	double tx = 0;
 	double ty = 0;
+	double ang = 0;
 
 	// Objects
 	BodyDef bodyGroundDef;
 	BodyDef bodyTargetDef;
 	BodyDef bodyObjDef;
 	BodyDef bodyLauncherDef;
+	BodyDef bodyTowerDef;
+
 	Body bodyGnd;
 	Body bodyObj;
 	Body bodyLnchr;
 	Body bodyTarget;
+	Body circle;
+	Body bodyTwer;
+
 	FixtureDef fixtureBallDef;
 	FixtureDef fixtureBoxDef;
 	Fixture fixtureBall;
@@ -124,15 +133,60 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	}
 
-	private void BodyShot(float w, float h, float x, float y, float inpulseX, float inpulseY, float weight) {
+	private void Rotate(float x, float y, float axe, float ang){
+
+		// Rotation
+		float tx = (float)Math.sin((ang - 1.5f) * (-1));
+		float ty = (float)Math.cos((ang - 1.5f) * (-1));
+
+		// Angle
+		float arctan = (float)Math.atan(tx / ty);
+
+		bodyLnchr.setTransform((tx * axe) + x, (ty * axe) + y, arctan * (-1));
+		circle.setTransform( x, y, arctan * (-1) + (1.5f) );
+
+	}
+
+	private void Shot(float x, float y, float power, float weight, float ang){
+
+		if(wave < waveTotal) {
+			if(bodyObj != null) {
+				world.destroyBody(bodyObj);
+				collide = true;
+			}
+
+			if(collide) {
+				// Rotation
+				float tx = (float)Math.sin((ang - 1.5f) * (-1));
+				float ty = (float)Math.cos((ang - 1.5f) * (-1));
+
+				// Angle
+				float arctan = (float)Math.atan(tx / ty);
+
+				BodyShot(
+						1,
+						1,
+						(tx) * power,
+						(ty)  * power,
+						(tx * 10.5f) + x,
+						(ty * 10.5f) + y,
+						arctan * (-1),
+						x + 5,
+						y  + 5,
+						weight);
+				collide = false;
+			}
+		}
+	}
+
+	private void BodyShot(float w, float h, float inpulseX, float inpulseY, float transformX, float transformY, float angle, float x, float y, float weight) {
 		bodyObjDef = new BodyDef();
 		bodyObjDef.type = BodyDef.BodyType.DynamicBody;
+		//bodyObjDef.type = BodyDef.BodyType.StaticBody;
 		bodyObjDef.position.set(x, y);
 		bodyObj = world.createBody(bodyObjDef);
 		bodyObj.applyLinearImpulse(inpulseX, inpulseY, x, y, true);
-
-		//CircleShape shape = new CircleShape();
-		//shape.setRadius(0.5f);
+		bodyObj.setTransform( transformX, transformY, angle );
 
 		PolygonShape shape = new PolygonShape();
 		shape.setAsBox(w, h);
@@ -150,18 +204,62 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		shape.dispose();
 	}
 
-	private void Shot(float x, float y, float weight){
-		if(wave < waveTotal) {
-			if(bodyObj != null) {
-				world.destroyBody(bodyObj);
-				collide = true;
-			}
+	private void BodyBase(float x, float y, float radius){
+		BodyDef bodyDef = new BodyDef();
+		bodyDef.type = BodyDef.BodyType.StaticBody;
+		bodyDef.position.set(x, y);
+		circle = world.createBody(bodyDef);
 
-			if(collide) {
-				BodyShot(1f, 1f, x, y, (float) (tx) * (power),(float) (ty) * (power), weight);
-				collide = false;
-			}
-		}
+		CircleShape dynamicCircle = new CircleShape();
+		dynamicCircle.setRadius(radius);
+
+		FixtureDef fixtureDef = new FixtureDef();
+		fixtureDef.shape = dynamicCircle;
+		fixtureDef.density = 0.4f;
+		fixtureDef.friction = 0.2f;
+		fixtureDef.restitution = 0.6f;
+
+		circle.createFixture(fixtureDef);
+
+
+		dynamicCircle.dispose();
+	}
+
+	private void BodyTower(float w, float h, float x, float y){
+		bodyTowerDef = new BodyDef();
+		bodyTowerDef.type = BodyDef.BodyType.KinematicBody;
+		bodyTowerDef.position.set(x, y/2);
+
+		bodyTwer = world.createBody(bodyTowerDef);
+
+		PolygonShape shape1 = new PolygonShape();
+		shape1.setAsBox(w, h/2);
+
+		FixtureDef fixtureDef1 = new FixtureDef();
+		fixtureDef1.shape = shape1;
+		fixtureDef1.density = 1;
+
+		fixtureTank = bodyTwer.createFixture(fixtureDef1);
+	}
+
+	private void BodyLauncher(float w, float h, float x, float y, float ang) {
+
+		bodyLauncherDef = new BodyDef();
+		bodyLauncherDef.type = BodyDef.BodyType.KinematicBody;
+		bodyLauncherDef.position.set(x, (y+w+h));
+
+		bodyLnchr = world.createBody(bodyLauncherDef);
+
+		PolygonShape shape1 = new PolygonShape();
+		shape1.setAsBox(w, h);
+
+		FixtureDef fixtureDef1 = new FixtureDef();
+		fixtureDef1.shape = shape1;
+		fixtureDef1.density = 1;
+
+		fixtureTank = bodyLnchr.createFixture(fixtureDef1);
+
+
 	}
 
 	private boolean CollisionBox(String a, String b) {
@@ -184,36 +282,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		return touch;
 	}
 
-	private void BodyLauncher(float w, float h, float x, float y, float ang) {
-
-		bodyLauncherDef = new BodyDef();
-		bodyLauncherDef.type = BodyDef.BodyType.KinematicBody;
-		bodyLauncherDef.position.set(x, y);
-		//bodyLauncherDef.position.set(100, 50);
-		//bodyLauncherDef.fixedRotation = false;
-		//bodyLauncherDef.angle = 0;
-		//bodyLauncherDef.position.x = x;
-		//bodyLauncherDef.position.y = y;
-
-		bodyLnchr = world.createBody(bodyLauncherDef);
-
-		//bodyLnchr.setUserData(this);
-		bodyLnchr.setTransform(x, y, ang);
-
-		PolygonShape shape1 = new PolygonShape();
-		shape1.setAsBox(w, h);
-
-		FixtureDef fixtureDef1 = new FixtureDef();
-		fixtureDef1.shape = shape1;
-		fixtureDef1.density = 1;
-
-		fixtureTank = bodyLnchr.createFixture(fixtureDef1);
-	}
-
 	private void bodyTarget(float w, float h,float x, float y, BodyDef.BodyType bodytype){
 		bodyTargetDef = new BodyDef();
 		bodyTargetDef.type = bodytype;
-		bodyTargetDef.position.set(x+(w), y+(h));
+		bodyTargetDef.position.set(x, (y*2));
 
 		bodyTarget = world.createBody(bodyTargetDef);
 
@@ -252,19 +324,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		shape.dispose();
 	}
 
-	private void ElevateLauncher( float x, float y) {
-
-		// Rotation
-		power = 20;
-		tx =  Math.sin(angle);
-		ty =  Math.cos(angle);
-
-		// Angle
-		float arctan = (float)Math.atan(tx / ty) * (-1);
-		//ang = getAngle(tx, ty);
-
-		// Elevate Laucher
-		bodyLnchr.setTransform(x, y, arctan);
+	public float getAngle(double x, double y){
+		double arctan = Math.atan(x / y);
+		float ang = (360 * (float)arctan) / (2 * (float)Math.PI);
+		return ang;
 	}
 
 	private void PnelInfo(){
@@ -300,7 +363,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		if(wave < waveTotal){
 			status = "Learning...";
-			Shot(elevateX, elevateY, weight);
+			Shot( LauncherX, LauncherY, power, weight, angle);
 		}
 
 		if(wave == waveTotal && shot) {
@@ -343,7 +406,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			System.out.println("Outputs: " + Arrays.toString(TestOutputs));
 
 			angle = (float) TestOutputs[0] * 100;
-			power = (float) TestOutputs[1] * 10;
+			power = (float) TestOutputs[0] * 10;
 
 			shot = false;
 
@@ -360,13 +423,12 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		box2DCamera.update();
 
 		// Position target
-		bodyTarget.setTransform(target, 0.0f, 0);
+		bodyTarget.setTransform(target, 1.0f, 0);
+
+		Rotate(LauncherX, LauncherY, 6, angle);
 
 		if(bodyObj != null && bodyObj.getPosition().y > maxhight)
 			maxhight = bodyObj.getPosition().y;
-
-		// Elevate launcher
-		ElevateLauncher(0, 0 );
 
 		if ((CollisionBox("ground", "shot") || CollisionBox("alvo", "shot")) && shot) {
 			if (!collide) {
@@ -394,7 +456,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			if(count > 100){
 				count = -1;
 				System.out.println();
-				Shot(elevateX, elevateY, weight);
+				Shot( LauncherX, LauncherY,power, weight, angle);
 			}
 		}
 
@@ -447,32 +509,77 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(18, 25);
-			arrPowers[i] = nnu.RamdomValues(2.0f, 6);
+			arrAngles[i] = nnu.RamdomValues(0, 1.3f);
+			arrPowers[i] = nnu.RamdomValues(2.0f, 30);
 		}
 
-		angle = (float)arrAngles[0];
-		power = (float)arrPowers[0];
+		//angle = (float)arrAngles[0];
+		//power = (float)arrPowers[0];
 
 		// Objects
-		BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
-		bodyTarget(1.0f,1.0f, target,-5.0f, BodyDef.BodyType.StaticBody);
-		BodyLauncher(1.0f, 3.0f, 0, 10, angle);
-
-		// Elevate launcher
-		ElevateLauncher(0, 10);
+		//BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
+		bodyTarget(1.0f,1.0f, target,5.0f, BodyDef.BodyType.StaticBody);
+		BodyTower(2, LauncherY, LauncherX, LauncherY);
+		BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+		BodyBase(LauncherX, LauncherY, 2);
+		BodyGround(WIDTH / 2, 0, 0, 0, true);
+		Rotate(LauncherX, LauncherY, 6, angle);
 
 		status = "Treinnering...";
 
 		// Start Shot
-		//Shot(0, elevateY, weight);
+		//Shot( LauncherX, LauncherY, power, weight, angle);
 
 		wave++;
 	}
 
 	@Override
 	public boolean keyDown(int keycode) {
-		System.out.println(angle);
+
+		if (keycode == Input.Keys.LEFT) {
+			angle -= .1;
+			//Rotate(LauncherX, LauncherY, 6, angle);
+			System.out.println(angle);
+		}
+
+		if (keycode == Input.Keys.RIGHT) {
+			angle += .1;
+			//Rotate(LauncherX, LauncherY, 6, angle);
+			System.out.println(angle);
+
+		}
+
+		if (keycode == Input.Keys.UP) {
+			LauncherY += 1;
+			//BodyTower(2, LauncherY, LauncherX, LauncherY);
+			//Rotate(LauncherX, LauncherY, 6, angle);
+			System.out.println(angle);
+
+		}
+
+		if (keycode == Input.Keys.DOWN) {
+			LauncherY -= 1;
+			//BodyTower(2, LauncherY, LauncherX, LauncherY);
+			//Rotate(LauncherX, LauncherY, 6, angle);
+			System.out.println(angle);
+
+		}
+
+		if(bodyTwer != null)
+			world.destroyBody(bodyTwer);
+
+		if(circle != null)
+			world.destroyBody(circle);
+
+		if(bodyLnchr != null)
+			world.destroyBody(bodyLnchr);
+
+		BodyTower(2, LauncherY, LauncherX, LauncherY);
+		BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+		BodyBase(LauncherX, LauncherY, 2);
+
+		Rotate(LauncherX, LauncherY, 6, angle);
+
 		return false;
 	}
 
@@ -489,7 +596,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		if(button == Input.Buttons.LEFT){
-			Shot(elevateX, elevateY, weight);
+			Shot( LauncherX, LauncherY, power, weight, angle);
 		}
 
 		return false;
