@@ -87,7 +87,7 @@ public class Giro extends ApplicationAdapter {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 angle = sldAngle.getValue();
-                Rotate(LauncherX, LauncherY, 6, angle);
+                Rotate(LauncherX, LauncherY, 4, angle);
             }
         });
 
@@ -108,10 +108,10 @@ public class Giro extends ApplicationAdapter {
 
                 angle = sldAngle.getValue();
                 BodyTower(2, LauncherY, 0, LauncherY);
-                BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+                BodyLauncher(1, 2, LauncherX, LauncherY, angle);
                 BodyBase(LauncherX, LauncherY, 2);
 
-                Rotate(LauncherX, LauncherY, 6, angle);
+                Rotate(LauncherX, LauncherY, 4, angle);
             }
         });
 
@@ -140,11 +140,11 @@ public class Giro extends ApplicationAdapter {
 
         angle = sldAngle.getValue();
         BodyTower(2, LauncherY, 0, LauncherY);
-        BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+        BodyLauncher(1, 2, LauncherX, LauncherY, angle);
         BodyBase(LauncherX, LauncherY, 2);
         BodyGround(WIDTH / 2, 0, 0, 0, true);
 
-        Rotate(LauncherX, LauncherY, 6, angle);
+        Rotate(LauncherX, LauncherY, 4, angle);
     }
 
     @Override
@@ -176,12 +176,12 @@ public class Giro extends ApplicationAdapter {
                 1,
                 1,
                 (tx) * power,
-                (ty)  * power,
-                (tx * 10.5f) + x,
-                (ty * 10.5f) + y,
+                (ty) * power,
+                (tx * 7.5f) + x,
+                (ty * 7.5f) + y,
                 arctan * (-1),
                 x + 5,
-                y  + 5,
+                y + 5,
                 weight);
     }
 

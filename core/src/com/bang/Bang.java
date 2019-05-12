@@ -61,8 +61,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	float power = 30;
 	float target = 100;
 	float weight = 50;
-	float elevateX = 10;
-	float elevateY = 10;
+	float height = 0;
 
 	float maxhight = 0;
 
@@ -70,6 +69,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	boolean shot = true;
 	double[] arrAngles = new double[waveTotal];
 	double[] arrPowers = new double[waveTotal];
+	double[] arrHight = new double[waveTotal];
 	double tx = 0;
 	double ty = 0;
 	double ang = 0;
@@ -103,7 +103,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	String status;
 
 	// NeuralNetwork
-	DataSet trainingSet = new DataSet(2, 2);
+	DataSet trainingSet = new DataSet(1, 2);
 	String FileDataset = "DataSet.tset";
 	String FileNetwork = "NewNeuralNetwork";
 	String pathDataSet = "data/";
@@ -149,7 +149,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	private void Shot(float x, float y, float power, float weight, float ang){
 
-		if(wave < waveTotal) {
+		if(wave <= waveTotal) {
 			if(bodyObj != null) {
 				world.destroyBody(bodyObj);
 				collide = true;
@@ -167,13 +167,14 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 						1,
 						1,
 						(tx) * power,
-						(ty)  * power,
-						(tx * 10.5f) + x,
-						(ty * 10.5f) + y,
+						(ty) * power,
+						(tx * 7.5f) + x,
+						(ty * 7.5f) + y,
 						arctan * (-1),
 						x + 5,
-						y  + 5,
+						y + 5,
 						weight);
+
 				collide = false;
 			}
 		}
@@ -343,10 +344,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
 
 		// Meural Network
-		String[] inputsLabel = new String[]{ "Target", "Mass" };
+		String[] inputsLabel = new String[]{ "Target"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
-		double[] inputs = new double[]{ (inObjDown / 100), (inShotW / 100) };
-		double[] outputs = new double[]{ (inAngle / 100), (inPower / 10) };
+		double[] inputs = new double[]{ (inObjDown / 100) };
+		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
 
 		// DataSet
 		trainingSet.addRow(new DataSetRow(inputs, outputs));
@@ -402,11 +403,11 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			wave = 0;
 
 			// Launcher
-			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (target / 100), (weight / 100) });
+			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (target / 100) });
 			System.out.println("Outputs: " + Arrays.toString(TestOutputs));
 
-			angle = (float) TestOutputs[0] * 100;
-			power = (float) TestOutputs[0] * 10;
+			angle = (float) TestOutputs[0];
+			power = (float) TestOutputs[1] * 100;
 
 			shot = false;
 
@@ -425,7 +426,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Position target
 		bodyTarget.setTransform(target, 1.0f, 0);
 
-		Rotate(LauncherX, LauncherY, 6, angle);
 
 		if(bodyObj != null && bodyObj.getPosition().y > maxhight)
 			maxhight = bodyObj.getPosition().y;
@@ -437,13 +437,30 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 				angle = (float)arrAngles[wave-1];
 				power = (float)arrPowers[wave-1];
+				height = (float)arrHight[wave-1];
 
 				float inAngle = angle;
 				float inObjDown = bodyObj.getPosition().x;
 				float inPower = power;
 				float inTarget = target;
 				float inWeight = weight;
-				float inHight = maxhight;
+				float inHight = height;
+
+				//LauncherY = height;
+				if(bodyTwer != null)
+					world.destroyBody(bodyTwer);
+
+				if(circle != null)
+					world.destroyBody(circle);
+
+				if(bodyLnchr != null)
+					world.destroyBody(bodyLnchr);
+
+				BodyTower(2, LauncherY, LauncherX, LauncherY);
+				BodyLauncher(1, 2, LauncherX, LauncherY, angle);
+				BodyBase(LauncherX, LauncherY, 2);
+
+				Rotate(LauncherX, LauncherY, 4, angle);
 
 				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
@@ -455,8 +472,8 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			if(count > 100){
 				count = -1;
-				System.out.println();
-				Shot( LauncherX, LauncherY,power, weight, angle);
+				System.out.println("\nShot!");
+				Shot( LauncherX, LauncherY, power, weight, angle);
 			}
 		}
 
@@ -510,27 +527,28 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
 			arrAngles[i] = nnu.RamdomValues(0, 1.3f);
-			arrPowers[i] = nnu.RamdomValues(2.0f, 30);
+			arrPowers[i] = nnu.RamdomValues(5.0f, 30);
+			arrHight[i] = nnu.RamdomValues(2.0f, 35);
 		}
 
-		//angle = (float)arrAngles[0];
-		//power = (float)arrPowers[0];
+		angle = (float)arrAngles[0];
+		power = (float)arrPowers[0];
+		height = (float)arrHight[0];
 
 		// Objects
-		//BodyGround(WIDTH / 2, 0f, HEIGHT / 2 , -1f, true);
 		bodyTarget(1.0f,1.0f, target,5.0f, BodyDef.BodyType.StaticBody);
 		BodyTower(2, LauncherY, LauncherX, LauncherY);
-		BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+		BodyLauncher(1, 2, LauncherX, LauncherY, angle);
 		BodyBase(LauncherX, LauncherY, 2);
 		BodyGround(WIDTH / 2, 0, 0, 0, true);
-		Rotate(LauncherX, LauncherY, 6, angle);
+		Rotate(LauncherX, LauncherY, 4, angle);
 
 		status = "Treinnering...";
 
 		// Start Shot
 		//Shot( LauncherX, LauncherY, power, weight, angle);
 
-		wave++;
+		//wave++;
 	}
 
 	@Override
@@ -553,7 +571,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			LauncherY += 1;
 			//BodyTower(2, LauncherY, LauncherX, LauncherY);
 			//Rotate(LauncherX, LauncherY, 6, angle);
-			System.out.println(angle);
+			System.out.println(LauncherY);
 
 		}
 
@@ -561,7 +579,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			LauncherY -= 1;
 			//BodyTower(2, LauncherY, LauncherX, LauncherY);
 			//Rotate(LauncherX, LauncherY, 6, angle);
-			System.out.println(angle);
+			System.out.println(LauncherY);
 
 		}
 
@@ -575,10 +593,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			world.destroyBody(bodyLnchr);
 
 		BodyTower(2, LauncherY, LauncherX, LauncherY);
-		BodyLauncher(1, 4, LauncherX, LauncherY, angle);
+		BodyLauncher(1, 2, LauncherX, LauncherY, angle);
 		BodyBase(LauncherX, LauncherY, 2);
 
-		Rotate(LauncherX, LauncherY, 6, angle);
+		Rotate(LauncherX, LauncherY, 4, angle);
 
 		return false;
 	}
