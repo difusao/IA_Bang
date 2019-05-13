@@ -51,7 +51,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	float timeElapsed = 0;
 
 	// AG
-	int waveTotal = 10;
+	int waveTotal = 2;
 	int wave = 0;
 
 	// Objects
@@ -350,25 +350,52 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
 
 		// DataSet
-		trainingSet.addRow(new DataSetRow(inputs, outputs));
+		//trainingSet.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
-		System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
-		for(int i=0; i<inputs.length; i++)
-			System.out.printf(Locale.US,"%012.8f ", inputs[i]);
+		//System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
+		//for(int i=0; i<inputs.length; i++)
+		//	System.out.printf(Locale.US,"%012.8f ", inputs[i]);
 
-		for(int i=0; i<outputs.length;i++)
-			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
+		//for(int i=0; i<outputs.length;i++)
+		//	System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
 
-		System.out.println();
+		//System.out.println();
 
 		if(wave < waveTotal){
 			status = "Learning...";
-			Shot( LauncherX, LauncherY, power, weight, angle);
+			//Shot( LauncherX, LauncherY, power, weight, angle);
 		}
 
 		if(wave == waveTotal && shot) {
 
+			// Clear Test
+			wave = 0;
+
+
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.70196930 }, new double[]{ 000.60000002, 000.24200001 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 001.02071098 }, new double[]{ 000.80000001, 000.30600000 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.85740494 }, new double[]{ 000.69999999, 000.27400000 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.56353783 }, new double[]{ 000.50000000, 000.21000000 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.27365692 }, new double[]{ 000.20000000, 000.11400000 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 001.17239517 }, new double[]{ 000.90000004, 000.33800003 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.34932705 }, new double[]{ 000.30000001, 000.14600000 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.44644432 }, new double[]{ 000.40000001, 000.17799999 }));
+			trainingSet.addRow(new DataSetRow(new double[]{ 000.21347958 }, new double[]{ 000.10000000, 000.08200000 }));
+
+
+			// Order by best aprouch target.
+			for(int i=0; i<trainingSet.getRows().size(); i++)
+				System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+
+			System.out.println();
+
+			trainingSet = rna.Order(trainingSet);
+
+			for(int i=0; i<trainingSet.getRows().size(); i++)
+				System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+
+			/*
 			// Clear NeuronNetwork and Dataset
 			new NetworkUtils().DeleteFileNN(pathDataSet + FileDataset);
 			new NetworkUtils().DeleteFileNN(pathNetwork + ".nnet" + FileNetwork);
@@ -383,7 +410,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.00001f,
+					0.000001f,
 					0.2f,
 					0.7f,
 					100000000,
@@ -399,9 +426,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			target = new NetworkUtils().RamdomValues(50, target);
 
-			// Clear Test
-			wave = 0;
-
 			// Launcher
 			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (target / 100) });
 			System.out.println("Outputs: " + Arrays.toString(TestOutputs));
@@ -409,10 +433,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			angle = (float) TestOutputs[0];
 			power = (float) TestOutputs[1] * 100;
 
-			shot = false;
-
 			status = "Outputs: " + Arrays.toString(TestOutputs)+ ", Time: " + (timeElapsed / 1000 / 60) + " Epochs = " + iterations;
+			*/
 
+			shot = false;
 			count = 0;
 		}
 	}
@@ -434,6 +458,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				wave++;
 				collide = true;
 
+				/*
 				angle = (float)arrAngles[wave-1];
 				power = (float)arrPowers[wave-1];
 				height = (float)arrHight[wave-1];
@@ -459,9 +484,13 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				BodyBase(LauncherX, LauncherY, 2);
 
 				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
+				*/
+
+				Treinner(0, 0, 0, 0, 0, 0);
 			}
 		}
 
+		/*
 		if(count > -1){
 			count++;
 			System.out.print(".");
@@ -472,6 +501,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				Shot( LauncherX, LauncherY, power, weight, angle);
 			}
 		}
+		*/
 
 		PnelInfo();
 

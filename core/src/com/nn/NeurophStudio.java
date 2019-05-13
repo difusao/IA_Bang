@@ -9,7 +9,13 @@ import org.neuroph.nnet.Perceptron;
 import org.neuroph.nnet.learning.MomentumBackpropagation;
 import org.neuroph.util.TransferFunctionType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class NeurophStudio {
     private String FileDataSet;
@@ -285,5 +291,87 @@ public class NeurophStudio {
         }
 
         return out;
+    }
+
+    public double MenorValor(DataSet trainingSet){
+        double menor = 99999999;
+
+        for(int i=0; i<trainingSet.getRows().size(); i++){
+            if(trainingSet.getRows().get(i).getInput()[0] < menor){
+                menor = trainingSet.getRows().get(i).getInput()[0];
+            }
+        }
+
+        return menor;
+    }
+
+    public DataSet Order(DataSet trainingSet) {
+        DataSet trainingSetTMP = new DataSet(1, 2);
+        double[] input = new double[trainingSet.getRows().size()];
+        double[] output = new double[trainingSet.getRows().size()];
+
+        int count = 0;
+        double max = 999999999;
+
+        while(count < trainingSet.getRows().size()) {
+            System.out.println("Menor= " + MenorValor(trainingSet));
+
+            for (int i = 0; i < trainingSet.getRows().size(); i++) {
+                if (MenorValor(trainingSet) == trainingSet.getRows().get(i).getInput()[0]) {
+                    trainingSet.remove(i);
+                }
+            }
+            count++;
+        }
+        /*
+        while(count < trainingSet.getRows().size()){
+            for(int i=0; i<trainingSet.getRows().size(); i++){
+                double inX = trainingSet.getRows().get(count).getInput()[0];
+
+                if(inX < max) {
+                    //System.out.println(trainingSet.getRows().get(count).getInput()[0]);
+                    //trainingSetTMP.getRows().add(trainingSet.getRows().get(count));
+                    //max = trainingSetTMP.getRows().get(i).getInput()[0];
+                    count++;
+                    break;
+                }
+            }
+        }
+        */
+
+        return trainingSet;
+
+        //for(int i=0; i<trainingSet.getRows().size(); i++)
+
+        //DataSet trainingSetTMP = new DataSet(1, 2);
+        //trainingSet.sort();
+
+
+               // while(count < trainingSet.getRows().size()){
+            //for(int i=0; i<trainingSet.getRows().size(); i++){
+              //  double inX = trainingSet.getRows().get(count).getInput()[0];
+              //  double inY = trainingSet.getRows().get(i).getInput()[0];
+
+                //if(inX > inY) {
+                    //System.out.println(trainingSet.getRows().get(count).getInput()[0]);
+                    //trainingSetTMP.getRows().add(trainingSet.getRows().get(count));
+                //    break;
+                //}
+            //}
+
+            /*if(trainingSet.getRows().get(count).getInput()[0] > max) {
+                trainingSetTMP.getRows().add(trainingSet.getRows().get(count));
+                max = trainingSet.getRows().get(count).getInput()[0];
+            }else{
+                trainingSetTMP.getRows().add(trainingSet.getRows().get(count));
+            }
+            */
+            //count++;
+        //}
+
+
+
+        //for(int i=0; i<trainingSet.getRows().size(); i++){
+        //}
     }
 }
