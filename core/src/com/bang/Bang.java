@@ -163,6 +163,8 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				// Angle
 				float arctan = (float)Math.atan(tx / ty);
 
+				Rotate(LauncherX, LauncherY, 4, angle);
+
 				BodyShot(
 						1,
 						1,
@@ -259,8 +261,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		fixtureDef1.density = 1;
 
 		fixtureTank = bodyLnchr.createFixture(fixtureDef1);
-
-
 	}
 
 	private boolean CollisionBox(String a, String b) {
@@ -383,7 +383,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.01f,
+					0.00001f,
 					0.2f,
 					0.7f,
 					100000000,
@@ -426,7 +426,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Position target
 		bodyTarget.setTransform(target, 1.0f, 0);
 
-
 		if(bodyObj != null && bodyObj.getPosition().y > maxhight)
 			maxhight = bodyObj.getPosition().y;
 
@@ -446,7 +445,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				float inWeight = weight;
 				float inHight = height;
 
-				//LauncherY = height;
 				if(bodyTwer != null)
 					world.destroyBody(bodyTwer);
 
@@ -459,8 +457,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				BodyTower(2, LauncherY, LauncherX, LauncherY);
 				BodyLauncher(1, 2, LauncherX, LauncherY, angle);
 				BodyBase(LauncherX, LauncherY, 2);
-
-				Rotate(LauncherX, LauncherY, 4, angle);
 
 				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
@@ -526,8 +522,12 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(0, 1.3f);
-			arrPowers[i] = nnu.RamdomValues(5.0f, 30);
+			//arrAngles[i] = nnu.RamdomValues(0, 1.3f);
+			arrAngles[i] = i * 0.1f;
+
+			//arrPowers[i] = nnu.RamdomValues(5.0f, 30);
+			arrPowers[i] = 5.0f + i * 3.2f;
+
 			arrHight[i] = nnu.RamdomValues(2.0f, 35);
 		}
 
@@ -548,7 +548,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Start Shot
 		//Shot( LauncherX, LauncherY, power, weight, angle);
 
-		//wave++;
+		wave++;
 	}
 
 	@Override
