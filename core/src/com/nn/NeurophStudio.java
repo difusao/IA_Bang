@@ -313,7 +313,7 @@ public class NeurophStudio {
         int count = 0;
         double max = 999999999;
 
-        while(count < trainingSet.getRows().size()) {
+        while(count < 9) {
             System.out.println("Menor= " + MenorValor(trainingSet));
 
             for (int i = 0; i < trainingSet.getRows().size(); i++) {
