@@ -51,7 +51,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	float timeElapsed = 0;
 
 	// AG
-	int waveTotal = 5;
+	int waveTotal = 10;
 	int wave = 0;
 
 	// Objects
@@ -332,7 +332,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		return ang;
 	}
 
-	private void PnelInfo(){
+	private void PanelInfo(){
 		batch.begin();
 		font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
 		font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
@@ -347,7 +347,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Meural Network
 		String[] inputsLabel = new String[]{ "Target"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
-		double[] inputs = new double[]{ (inObjDown / 100) };
+		double[] inputs = new double[]{ (inTarget / 100) };
 		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
 
 		// DataSet
@@ -363,20 +363,17 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		System.out.println();
 
-		if(wave < waveTotal){
-			status = "Learning...";
+		if(wave < waveTotal)
 			Shot( LauncherX, LauncherY, power, weight, angle);
-		}
 
 		if(wave == waveTotal && shot) {
-
 			// Clear Test
 			wave = 0;
+			shot = false;
 
-			System.out.println("\nOrder");
+			System.out.println("\nOrder...");
 			// Order by best aprouch target.
 			trainingSet = rna.Order(trainingSet);
-
 			for(int i=0; i<trainingSet.getRows().size(); i++)
 				System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
 
@@ -386,7 +383,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			start = System.currentTimeMillis();
 
-			System.out.print("\nTreinando... ");
+			System.out.print("\nLearning... ");
 
 			int iterations = rna.PerceptronMLSave(
 					TransferFunctionType.SIGMOID,
@@ -394,10 +391,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.1f,
+					0.0001f,
 					0.2f,
 					0.7f,
-					1000000,
+					10000000,
 					inputsLabel,
 					outputsLabel);
 
@@ -406,19 +403,31 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			finish = System.currentTimeMillis();
 			timeElapsed = ((finish - start));
-			System.out.printf(Locale.US, "Time Elapsed:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
+			System.out.printf(Locale.US, "Time Elapsed of training:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
 
-			target = new NetworkUtils().RamdomValues(50, target);
+			target = new NetworkUtils().RamdomValues(50, 100);
+
+			// Start Neural Network
+			neural = true;
+			count = 0;
+		}
+	}
+
+	public void TestingNN(){
+		if(wave <= waveTotal) {
+			status = "Trying...";
+
+			target = new NetworkUtils().RamdomValues(50, 100);
 
 			// Launcher
 			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{(target / 100)});
-			System.out.println("Outputs: " + Arrays.toString(TestOutputs));
+			System.out.print("Outputs: " + Arrays.toString(TestOutputs) + " ");
 
 			angle = (float) TestOutputs[0];
 			power = (float) TestOutputs[1] * 100;
 
-			shot = false;
-			count = 0;
+			// Shot object with output results
+			Shot(LauncherX, LauncherY, power, weight, angle);
 		}
 	}
 
@@ -438,6 +447,8 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			if (!collide) {
 				wave++;
 				collide = true;
+
+				//target = new NetworkUtils().RamdomValues(50, 100);
 
 				angle = (float)arrAngles[wave-1];
 				power = (float)arrPowers[wave-1];
@@ -472,14 +483,17 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				wave++;
 				collide = true;
 
-				// Launcher
-				double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{(target / 100)});
-				System.out.println("Outputs: " + Arrays.toString(TestOutputs));
+				float inAngle = angle;
+				float inObjDown = bodyObj.getPosition().x;
+				float inPower = power;
+				float inTarget = target;
+				float inWeight = weight;
+				float inHight = height;
 
-				angle = (float) TestOutputs[0];
-				power = (float) TestOutputs[1] * 100;
+				System.out.print("Target: " + inTarget + " ");
+				System.out.println("ObjDown: " + inObjDown);
 
-				System.out.println("\nNeural!");
+				TestingNN();
 			}
 		}
 
@@ -489,13 +503,12 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			if(count > 100){
 				count = -1;
-				neural = true;
-				System.out.println("\nShot!");
-				Shot( LauncherX, LauncherY, power, weight, angle);
+				System.out.println();
+				TestingNN();
 			}
 		}
 
-		PnelInfo();
+		PanelInfo();
 
 		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 	}
@@ -538,19 +551,20 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		batch = new SpriteBatch();
 
-		font1 = new BitmapFont(Gdx.files.internal("fonts/verdana20.fnt"));
+		font1 = new BitmapFont(Gdx.files.internal("./fonts/verdana20.fnt"));
 		font1.setColor(Color.WHITE);
 		font1.getData().setScale(1f, 1f);
 
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(0, 1.3f);
-			//arrAngles[i] = i * 0.1f;
+			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
+			//arrAngles[i] = i * 0.1f;					// Incremental Angle
+			//arrAngles[i] = 0.35f;						// Fix Angle
 
-			arrPowers[i] = nnu.RamdomValues(5.0f, 30);
-			//arrPowers[i] = 5.0f + i * 3.2f;
+			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
+			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
 
-			arrHight[i] = nnu.RamdomValues(2.0f, 35);
+			//arrHight[i] = nnu.RamdomValues(2.0f, 35);
 		}
 
 		angle = (float)arrAngles[0];
@@ -565,12 +579,14 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		BodyGround(WIDTH / 2, 0, 0, 0, true);
 		Rotate(LauncherX, LauncherY, 4, angle);
 
-		status = "Treinnering...";
+		status = "Please, tap or click in to the screen to start learn...";
 
 		// Start Shot
 		//Shot( LauncherX, LauncherY, power, weight, angle);
 
-		wave++;
+		//wave++;
+
+		System.out.println("\nShots...");
 	}
 
 	@Override
@@ -636,6 +652,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		if(button == Input.Buttons.LEFT){
+			status = "Ramdom Shots...";
 			Shot( LauncherX, LauncherY, power, weight, angle);
 		}
 
