@@ -342,12 +342,41 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		batch.end();
 	}
 
+	private void PreTreino(){
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.15380787 }, new double[]{ 000.00000000, 000.05000000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.15384898 }, new double[]{ 000.10000000, 000.08200000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18964457 }, new double[]{ 000.20000000, 000.11400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24488462 }, new double[]{ 000.30000001, 000.14600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32823776 }, new double[]{ 000.40000001, 000.17799999 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44175167 }, new double[]{ 000.50000000, 000.21000000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.58410149 }, new double[]{ 000.60000002, 000.24200001 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.74993767 }, new double[]{ 000.69999999, 000.27400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.92318542 }, new double[]{ 000.80000001, 000.30600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.07568604 }, new double[]{ 000.90000004, 000.33800003 }));
+
+		String[] inputsLabel = new String[]{ "TargetX"};
+		String[] outputsLabel = new String[]{ "Angle", "Power" };
+
+		int iterations = rna.PerceptronMLSave(
+				TransferFunctionType.SIGMOID,
+				trainingSet,
+				new int[]{1, 10, 2},
+				FileDataset,
+				FileNetwork + ".nnet",
+				0.001f,
+				0.2f,
+				0.7f,
+				10000000,
+				inputsLabel,
+				outputsLabel);
+	}
+
 	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
 
 		// Meural Network
-		String[] inputsLabel = new String[]{ "Target"};
+		String[] inputsLabel = new String[]{ "TargetX"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
-		double[] inputs = new double[]{ (inTarget / 100) };
+		double[] inputs = new double[]{ (inObjDown / 100) };
 		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
 
 		// DataSet
@@ -391,7 +420,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.0001f,
+					0.001f,
 					0.2f,
 					0.7f,
 					10000000,
@@ -557,12 +586,12 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
-			//arrAngles[i] = i * 0.1f;					// Incremental Angle
+			//arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
+			arrAngles[i] = i * 0.1f;					// Incremental Angle
 			//arrAngles[i] = 0.35f;						// Fix Angle
 
-			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
-			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
+			//arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
+			arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
 
 			//arrHight[i] = nnu.RamdomValues(2.0f, 35);
 		}
@@ -580,6 +609,8 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		Rotate(LauncherX, LauncherY, 4, angle);
 
 		status = "Please, tap or click in to the screen to start learn...";
+
+		PreTreino();
 
 		// Start Shot
 		//Shot( LauncherX, LauncherY, power, weight, angle);
