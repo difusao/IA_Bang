@@ -1,5 +1,7 @@
 package com.bang;
 
+import com.ag.AlgoritmoGenetico;
+import com.ag.Shot;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -342,20 +344,201 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		batch.end();
 	}
 
-	private void PreTreino(){
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.15380787 }, new double[]{ 000.00000000, 000.05000000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.15384898 }, new double[]{ 000.10000000, 000.08200000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.18964457 }, new double[]{ 000.20000000, 000.11400000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.24488462 }, new double[]{ 000.30000001, 000.14600000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.32823776 }, new double[]{ 000.40000001, 000.17799999 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.44175167 }, new double[]{ 000.50000000, 000.21000000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.58410149 }, new double[]{ 000.60000002, 000.24200001 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.74993767 }, new double[]{ 000.69999999, 000.27400000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 000.92318542 }, new double[]{ 000.80000001, 000.30600000 }));
-		trainingSet.addRow(new DataSetRow(new double[]{ 001.07568604 }, new double[]{ 000.90000004, 000.33800003 }));
+	private void PreTrainner(){
+		// Sequency full
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.15382284 }, new double[]{ 000.10000000, 000.08200000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18968008 }, new double[]{ 000.20000000, 000.11400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24485250 }, new double[]{ 000.30000001, 000.14600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32825493 }, new double[]{ 000.40000001, 000.17799999 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44173283 }, new double[]{ 000.50000000, 000.21000000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.58407043 }, new double[]{ 000.60000002, 000.24200001 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.74968674 }, new double[]{ 000.69999999, 000.27400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.92264603 }, new double[]{ 000.80000001, 000.30600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.07553398 }, new double[]{ 000.90000004, 000.33800003 }));
 
-		String[] inputsLabel = new String[]{ "TargetX"};
+		// sequency fix angle
+		/*trainingSet.addRow(new DataSetRow(new double[]{ 000.15382284 }, new double[]{ 000.35825493, 000.08200000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18968008 }, new double[]{ 000.35825493, 000.11400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24485250 }, new double[]{ 000.35825493, 000.14600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32825493 }, new double[]{ 000.35825493, 000.17799999 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44173283 }, new double[]{ 000.35825493, 000.21000000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.58407043 }, new double[]{ 000.35825493, 000.24200001 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.74968674 }, new double[]{ 000.35825493, 000.27400000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.92264603 }, new double[]{ 000.35825493, 000.30600000 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.07553398 }, new double[]{ 000.35825493, 000.33800003 }));*/
+
+		//Ramdom angle fix
+		/*trainingSet.addRow(new DataSetRow(new double[]{ 000.52571178 }, new double[]{ 000.35825493, 000.34525303 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.25414192 }, new double[]{ 000.35825493, 000.14275503 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.25942253 }, new double[]{ 000.35825493, 000.09295855 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.13521318 }, new double[]{ 000.35825493, 000.09910114 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.13765844 }, new double[]{ 000.35825493, 000.20074352 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.40865543 }, new double[]{ 000.35825493, 000.21583134 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.62865990 }, new double[]{ 000.35825493, 000.21921360 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.57100391 }, new double[]{ 000.35825493, 000.20749729 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.42771488 }, new double[]{ 000.35825493, 000.16952791 }));*/
+
+		// Ramdom full
+		/*trainingSet.addRow(new DataSetRow(new double[]{ 000.45959141 }, new double[]{ 000.67028874, 000.30644588 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.09588509 }, new double[]{ 000.64899182, 000.16062449 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.30127117 }, new double[]{ 001.26450837, 000.31918386 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.55558407 }, new double[]{ 001.05931032, 000.25987432 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.64508682 }, new double[]{ 000.59274757, 000.08821141 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.22835463 }, new double[]{ 000.21328776, 000.13846851 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.28797295 }, new double[]{ 000.41088295, 000.23817520 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.65809425 }, new double[]{ 000.86217695, 000.17242796 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.42642300 }, new double[]{ 000.23241945, 000.15341789 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32160751 }, new double[]{ 000.19333835, 000.10510767 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.23060301 }, new double[]{ 001.10853362, 000.21803848 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44847355 }, new double[]{ 000.82467955, 000.23822594 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.70740677 }, new double[]{ 000.00743688, 000.13910162 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.21721832 }, new double[]{ 001.09103382, 000.17250492 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32927853 }, new double[]{ 000.91557282, 000.29969929 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.97569893 }, new double[]{ 000.53713620, 000.32496628 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.18679283 }, new double[]{ 000.28894845, 000.15287192 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.33946640 }, new double[]{ 000.58733255, 000.34000702 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.31071136 }, new double[]{ 000.52603889, 000.08801929 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.22967712 }, new double[]{ 000.94604683, 000.32809113 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.10177864 }, new double[]{ 000.41595006, 000.18500301 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.46770779 }, new double[]{ 001.08737183, 000.09527779 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.17181334 }, new double[]{ 000.37072465, 000.19174831 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.47295815 }, new double[]{ 001.21575189, 000.11543597 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.16187805 }, new double[]{ 000.19320028, 000.11204786 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24117201 }, new double[]{ 000.60671377, 000.22644302 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.67592026 }, new double[]{ 001.07659316, 000.28596573 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.73630920 }, new double[]{ 000.85572445, 000.18607023 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.47672829 }, new double[]{ 000.24717534, 000.17707533 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.37957794 }, new double[]{ 000.97633225, 000.28013802 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.81848793 }, new double[]{ 000.88372654, 000.34668243 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.29434982 }, new double[]{ 000.54363608, 000.16840744 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44125805 }, new double[]{ 000.60265291, 000.30238163 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.06676338 }, new double[]{ 000.11955529, 000.33184021 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.63386642 }, new double[]{ 000.67885453, 000.17300467 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.46119747 }, new double[]{ 001.25661242, 000.06517340 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.10004046 }, new double[]{ 000.23087646, 000.20787630 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.44528984 }, new double[]{ 001.06230974, 000.10618064 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.19624872 }, new double[]{ 000.56456703, 000.32328442 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.19005173 }, new double[]{ 001.24289858, 000.12292812 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.16151594 }, new double[]{ 001.05263484, 000.29505432 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.80737160 }, new double[]{ 000.92917681, 000.15944736 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.36394981 }, new double[]{ 000.82027793, 000.31247086 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.11178459 }, new double[]{ 001.23606479, 000.14717314 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.19054502 }, new double[]{ 000.21649753, 000.07219234 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.19112398 }, new double[]{ 000.37487775, 000.26894444 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.76072701 }, new double[]{ 001.28648734, 000.11510741 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.13533297 }, new double[]{ 000.30754060, 000.18217434 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.41851555 }, new double[]{ 000.49803624, 000.07477890 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.20558220 }, new double[]{ 001.11446345, 000.11282589 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.19248365 }, new double[]{ 000.37348193, 000.23900892 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.63894539 }, new double[]{ 001.17556465, 000.12581738 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18865715 }, new double[]{ 000.19355074, 000.28326391 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.61851330 }, new double[]{ 000.20818901, 000.06011982 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.17700384 }, new double[]{ 000.82410312, 000.15558278 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.38061321 }, new double[]{ 000.29032436, 000.32329185 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.90126923 }, new double[]{ 000.26595795, 000.11995030 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.26788820 }, new double[]{ 000.09238939, 000.19806698 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32905781 }, new double[]{ 000.61173147, 000.09518163 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24229883 }, new double[]{ 000.03464509, 000.28014359 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.38917896 }, new double[]{ 001.26257122, 000.12388315 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.15445996 }, new double[]{ 000.43258020, 000.12668566 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.30802692 }, new double[]{ 000.46885568, 000.13498516 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.33414032 }, new double[]{ 000.96386623, 000.10489333 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.21812374 }, new double[]{ 001.21800339, 000.20510599 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.32022346 }, new double[]{ 000.20303914, 000.14997758 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.30497606 }, new double[]{ 000.32828161, 000.34176765 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.04766693 }, new double[]{ 000.23589988, 000.32382271 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.82041267 }, new double[]{ 000.40066704, 000.14169532 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.33981876 }, new double[]{ 000.66433799, 000.22306896 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.66516663 }, new double[]{ 000.91771126, 000.11392435 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.24741709 }, new double[]{ 001.24310648, 000.08229156 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.11741192 }, new double[]{ 000.49088821, 000.07854007 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.20794281 }, new double[]{ 000.62381893, 000.18144855 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.49297726 }, new double[]{ 000.70930552, 000.07244575 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.19239120 }, new double[]{ 000.05564481, 000.13559632 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.23199766 }, new double[]{ 000.00357823, 000.26566761 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.33215076 }, new double[]{ 000.90880239, 000.25738260 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.75847122 }, new double[]{ 001.08199596, 000.21461729 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.45855362 }, new double[]{ 001.29376161, 000.13690344 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.15596062 }, new double[]{ 000.05527459, 000.08120103 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18207182 }, new double[]{ 000.51634920, 000.30555208 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.05717964 }, new double[]{ 000.14631742, 000.08736097 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.20133490 }, new double[]{ 000.28250036, 000.30209536 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.80049347 }, new double[]{ 000.27891779, 000.30925152 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.82685532 }, new double[]{ 000.65562475, 000.06847314 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.18878588 }, new double[]{ 000.04085932, 000.20312212 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.29927446 }, new double[]{ 000.41681707, 000.28545486 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.87262810 }, new double[]{ 001.12690008, 000.34647408 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.30057993 }, new double[]{ 000.55373406, 000.14022909 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.35516464 }, new double[]{ 000.56723541, 000.30630169 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 001.07146965 }, new double[]{ 000.48253143, 000.25518637 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.77216599 }, new double[]{ 000.70559448, 000.28456003 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.98297287 }, new double[]{ 000.86148620, 000.25966866 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.79795135 }, new double[]{ 000.47852772, 000.11069248 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.27600538 }, new double[]{ 000.25493449, 000.34399994 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.93488739 }, new double[]{ 001.08038676, 000.29644695 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.77798355 }, new double[]{ 000.93099535, 000.21478134 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.55673985 }, new double[]{ 000.26546732, 000.21218929 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.47784130 }, new double[]{ 001.29596937, 000.30568989 }));
+		trainingSet.addRow(new DataSetRow(new double[]{ 000.45781956 }, new double[]{ 000.78035259, 000.26524124 }));*/
+
+		String[] inputsLabel = new String[]{ "Target"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
+
+		new NetworkUtils().DeleteFileNN(pathDataSet + FileDataset);
+		new NetworkUtils().DeleteFileNN(pathNetwork + ".nnet" + FileNetwork);
+
+		start = System.currentTimeMillis();
+
+		// Order by best aprouch target.
+		//System.out.println("\nOrder...");
+		//trainingSet = rna.Order(trainingSet);
+		//for(int i=0; i<trainingSet.getRows().size(); i++)
+		//	System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+		//System.out.println();
+
+		//Genetic Alghoritm
+		List<Shot> listShots = new ArrayList();
+		for(int i=0; i<trainingSet.getRows().size(); i++)
+			listShots.add(new Shot(i, trainingSet.getRows().get(i).getInput()[0], (target/100) - trainingSet.getRows().get(i).getInput()[0]));
+
+		List spaces = new ArrayList();
+		List values = new ArrayList();
+		List ids = new ArrayList();
+
+		for (Shot shot: listShots) {
+			spaces.add(shot.getSpace());
+			values.add(shot.getValue());
+			ids.add(shot.getId());
+		}
+
+		Double limite = 10.0;
+		Double taxaMutacao = 0.05;
+		int tamanhoPopulacao = 10;
+		int numeroGeracoes = 100;
+
+		AlgoritmoGenetico ag = new AlgoritmoGenetico(tamanhoPopulacao);
+		List resultado = ag.resolver(taxaMutacao, numeroGeracoes, spaces, values, limite);
+
+		//for (int i = 0; i < listShots.size(); i++) {
+		//	if (resultado.get(i).equals("1")) {
+		//		System.out.printf(Locale.US, "Id: %03d Space: %f Value: %f%n", listShots.get(i).getId(), listShots.get(i).getSpace(), listShots.get(i).getValue());
+		//	}
+		//}
+
+		int totalTraining = trainingSet.getRows().size();
+
+		for(int i=0; i<totalTraining; i++)
+			if (resultado.get(i).equals("0")) {
+				trainingSet.remove(i);
+				totalTraining = trainingSet.getRows().size();
+			}
+
+		//trainingSet = rna.Order(trainingSet);
+		for(int i=0; i<trainingSet.getRows().size(); i++)
+			System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+		System.out.println();
+
+		System.out.print("\nLearning... ");
 
 		int iterations = rna.PerceptronMLSave(
 				TransferFunctionType.SIGMOID,
@@ -363,18 +546,25 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				new int[]{1, 10, 2},
 				FileDataset,
 				FileNetwork + ".nnet",
-				0.001f,
+				0.00001f,
 				0.2f,
 				0.7f,
 				10000000,
 				inputsLabel,
 				outputsLabel);
+
+		System.out.println("Iterações: " + iterations);
+		rna.TestNetworkMl(FileNetwork + ".nnet", trainingSet);
+
+		finish = System.currentTimeMillis();
+		timeElapsed = ((finish - start));
+		System.out.printf(Locale.US, "Time Elapsed of training:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
 	}
 
-	private void Treinner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
+	private void Trainner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
 
 		// Meural Network
-		String[] inputsLabel = new String[]{ "TargetX"};
+		String[] inputsLabel = new String[]{ "Target"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
 		double[] inputs = new double[]{ (inObjDown / 100) };
 		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
@@ -383,14 +573,32 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		trainingSet.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
+		/*
 		System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
 		for(int i=0; i<inputs.length; i++)
 			System.out.printf(Locale.US,"%012.8f ", inputs[i]);
 
 		for(int i=0; i<outputs.length;i++)
 			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
+		*/
 
-		System.out.println();
+		System.out.print("trainingSet.addRow(new DataSetRow(new double[]{ ");
+
+		for(int i=0; i<inputs.length; i++) {
+			System.out.printf(Locale.US, "%012.8f", inputs[i]);
+			if(i<inputs.length-1)
+				System.out.print(", ");
+			else
+				System.out.print(" }, new double[]{ ");
+		}
+
+		for(int i=0; i<outputs.length;i++) {
+			System.out.printf(Locale.US, "%012.8f", outputs[i]);
+			if(i<outputs.length-1)
+				System.out.print(", ");
+		}
+
+		System.out.println(" }));");
 
 		if(wave < waveTotal)
 			Shot( LauncherX, LauncherY, power, weight, angle);
@@ -420,7 +628,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					new int[]{inputs.length, 10, outputs.length},
 					FileDataset,
 					FileNetwork + ".nnet",
-					0.001f,
+					0.0001f,
 					0.2f,
 					0.7f,
 					10000000,
@@ -503,7 +711,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				BodyLauncher(1, 2, LauncherX, LauncherY, angle);
 				BodyBase(LauncherX, LauncherY, 2);
 
-				Treinner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
+				Trainner(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
 		}
 
@@ -580,25 +788,29 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		batch = new SpriteBatch();
 
-		font1 = new BitmapFont(Gdx.files.internal("./fonts/verdana20.fnt"));
+		font1 = new BitmapFont(Gdx.files.internal("fonts/verdana20.fnt"));
 		font1.setColor(Color.WHITE);
 		font1.getData().setScale(1f, 1f);
 
 		// Default values
 		for(int i=0; i<waveTotal; i++) {
-			//arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
-			arrAngles[i] = i * 0.1f;					// Incremental Angle
+			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
+			//arrAngles[i] = i * 0.1f;					// Incremental Angle
 			//arrAngles[i] = 0.35f;						// Fix Angle
 
-			//arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
-			arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
+			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
+			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
 
-			//arrHight[i] = nnu.RamdomValues(2.0f, 35);
+			//arrHight[i] = nnu.RamdomValues(2.0f, 35); // Random elevate
 		}
 
 		angle = (float)arrAngles[0];
 		power = (float)arrPowers[0];
 		height = (float)arrHight[0];
+
+		PreTrainner();
+		shot = false;
+		neural = true;
 
 		// Objects
 		bodyTarget(1.0f,1.0f, target,5.0f, BodyDef.BodyType.StaticBody);
@@ -610,14 +822,11 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 		status = "Please, tap or click in to the screen to start learn...";
 
-		PreTreino();
-
 		// Start Shot
 		//Shot( LauncherX, LauncherY, power, weight, angle);
 
-		//wave++;
-
-		System.out.println("\nShots...");
+		wave++;
+		//System.out.println("\nShots...");
 	}
 
 	@Override

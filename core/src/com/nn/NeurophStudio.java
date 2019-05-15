@@ -294,14 +294,13 @@ public class NeurophStudio {
     }
 
     private DataSetRow MenorValor(DataSet trainingSet){
-
         DataSetRow row = new DataSetRow();
-
         double menor = 99999999;
 
         for(int i=0; i<trainingSet.getRows().size(); i++){
-            if(trainingSet.getRows().get(i).getInput()[0] < menor){
-                menor = trainingSet.getRows().get(i).getInput()[0];
+            double col = trainingSet.getRows().get(i).getInput()[0];
+            if(col < menor){
+                menor = col;
                 row = trainingSet.getRows().get(i);
             }
         }
@@ -311,7 +310,6 @@ public class NeurophStudio {
 
     public DataSet Order(DataSet trainingSet) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
-
         int count = 0;
         int total = trainingSet.getRows().size();
 
