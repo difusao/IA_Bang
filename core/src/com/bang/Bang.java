@@ -106,6 +106,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	// NeuralNetwork
 	DataSet trainingSet = new DataSet(1, 2);
+	DataSet trainingSet2 = new DataSet(1, 2);
 	String FileDataset = "DataSet.tset";
 	String FileNetwork = "NewNeuralNetwork";
 	String pathDataSet = "data/";
@@ -344,6 +345,47 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		batch.end();
 	}
 
+	private DataSet AG(DataSet trainingSet){
+		//Genetic Alghoritm
+		List<Shot> listShots = new ArrayList();
+		for(int i=0; i<trainingSet.getRows().size(); i++) {
+			listShots.add(new Shot(
+					i,
+					trainingSet.getRows().get(i).getInput()[0],
+					(target / 100) - trainingSet.getRows().get(i).getInput()[0]
+			));
+
+			System.out.println( (target / 100) + " / " + trainingSet.getRows().get(i).getInput()[0]);
+		}
+
+		List spaces = new ArrayList();
+		List values = new ArrayList();
+		List ids = new ArrayList();
+
+		for (Shot shot: listShots) {
+			spaces.add(shot.getSpace());
+			values.add(shot.getValue());
+			ids.add(shot.getId());
+		}
+
+		Double limite = 3.0;
+		Double taxaMutacao = 0.05;
+		int tamanhoPopulacao = 10;
+		int numeroGeracoes = 100;
+
+		AlgoritmoGenetico ag = new AlgoritmoGenetico(tamanhoPopulacao);
+		List resultado = ag.resolver(taxaMutacao, numeroGeracoes, spaces, values, limite);
+
+		int totalTraining = trainingSet.getRows().size();
+		for(int i=0; i<totalTraining; i++)
+			if (resultado.get(i).equals("0")) {
+				trainingSet.remove(i);
+				totalTraining = trainingSet.getRows().size();
+			}
+
+		return trainingSet;
+	}
+
 	private void PreTrainner(){
 		// Sequency full
 		trainingSet.addRow(new DataSetRow(new double[]{ 000.15382284 }, new double[]{ 000.10000000, 000.08200000 }));
@@ -496,47 +538,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		//	System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
 		//System.out.println();
 
-		//Genetic Alghoritm
-		List<Shot> listShots = new ArrayList();
-		for(int i=0; i<trainingSet.getRows().size(); i++)
-			listShots.add(new Shot(i, trainingSet.getRows().get(i).getInput()[0], (target/100) - trainingSet.getRows().get(i).getInput()[0]));
-
-		List spaces = new ArrayList();
-		List values = new ArrayList();
-		List ids = new ArrayList();
-
-		for (Shot shot: listShots) {
-			spaces.add(shot.getSpace());
-			values.add(shot.getValue());
-			ids.add(shot.getId());
-		}
-
-		Double limite = 10.0;
-		Double taxaMutacao = 0.05;
-		int tamanhoPopulacao = 10;
-		int numeroGeracoes = 100;
-
-		AlgoritmoGenetico ag = new AlgoritmoGenetico(tamanhoPopulacao);
-		List resultado = ag.resolver(taxaMutacao, numeroGeracoes, spaces, values, limite);
-
-		//for (int i = 0; i < listShots.size(); i++) {
-		//	if (resultado.get(i).equals("1")) {
-		//		System.out.printf(Locale.US, "Id: %03d Space: %f Value: %f%n", listShots.get(i).getId(), listShots.get(i).getSpace(), listShots.get(i).getValue());
-		//	}
-		//}
-
-		int totalTraining = trainingSet.getRows().size();
-
-		for(int i=0; i<totalTraining; i++)
-			if (resultado.get(i).equals("0")) {
-				trainingSet.remove(i);
-				totalTraining = trainingSet.getRows().size();
-			}
-
 		//trainingSet = rna.Order(trainingSet);
-		for(int i=0; i<trainingSet.getRows().size(); i++)
-			System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
-		System.out.println();
+		//for(int i=0; i<trainingSet.getRows().size(); i++)
+		//	System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+		//System.out.println();
 
 		System.out.print("\nLearning... ");
 
@@ -546,7 +551,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				new int[]{1, 10, 2},
 				FileDataset,
 				FileNetwork + ".nnet",
-				0.00001f,
+				0.001f,
 				0.2f,
 				0.7f,
 				10000000,
@@ -561,6 +566,20 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		System.out.printf(Locale.US, "Time Elapsed of training:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
 	}
 
+	private void DefaultShots(){
+		// Default values
+		for(int i=0; i<waveTotal; i++) {
+			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
+			//arrAngles[i] = i * 0.1f;					// Incremental Angle
+			//arrAngles[i] = 0.35f;						// Fix Angle
+
+			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
+			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
+
+			//arrHight[i] = nnu.RamdomValues(2.0f, 35); // Random elevate
+		}
+	}
+
 	private void Trainner(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight) {
 
 		// Meural Network
@@ -573,32 +592,27 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		trainingSet.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
-		/*
 		System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
 		for(int i=0; i<inputs.length; i++)
 			System.out.printf(Locale.US,"%012.8f ", inputs[i]);
-
 		for(int i=0; i<outputs.length;i++)
 			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
-		*/
+		System.out.println();
 
-		System.out.print("trainingSet.addRow(new DataSetRow(new double[]{ ");
-
-		for(int i=0; i<inputs.length; i++) {
-			System.out.printf(Locale.US, "%012.8f", inputs[i]);
-			if(i<inputs.length-1)
-				System.out.print(", ");
-			else
-				System.out.print(" }, new double[]{ ");
-		}
-
-		for(int i=0; i<outputs.length;i++) {
-			System.out.printf(Locale.US, "%012.8f", outputs[i]);
-			if(i<outputs.length-1)
-				System.out.print(", ");
-		}
-
-		System.out.println(" }));");
+		//System.out.print("trainingSet.addRow(new DataSetRow(new double[]{ ");
+		//for(int i=0; i<inputs.length; i++) {
+		//	System.out.printf(Locale.US, "%012.8f", inputs[i]);
+		//	if(i<inputs.length-1)
+		//		System.out.print(", ");
+		//	else
+		//		System.out.print(" }, new double[]{ ");
+		//}
+		//for(int i=0; i<outputs.length;i++) {
+		//	System.out.printf(Locale.US, "%012.8f", outputs[i]);
+		//	if(i<outputs.length-1)
+		//		System.out.print(", ");
+		//}
+		//System.out.println(" }));");
 
 		if(wave < waveTotal)
 			Shot( LauncherX, LauncherY, power, weight, angle);
@@ -608,15 +622,16 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			wave = 0;
 			shot = false;
 
-			System.out.println("\nOrder...");
 			// Order by best aprouch target.
-			trainingSet = rna.Order(trainingSet);
+			//System.out.println("\nOrder...");
+			//trainingSet = rna.Order(trainingSet);
+			//for(int i=0; i<trainingSet.getRows().size(); i++)
+			//	System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
+
+			AG(trainingSet);
+
 			for(int i=0; i<trainingSet.getRows().size(); i++)
 				System.out.println(i + " " + Arrays.toString(trainingSet.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet.getRows().get(i).getDesiredOutput()));
-
-			// Clear NeuronNetwork and Dataset
-			new NetworkUtils().DeleteFileNN(pathDataSet + FileDataset);
-			new NetworkUtils().DeleteFileNN(pathNetwork + ".nnet" + FileNetwork);
 
 			start = System.currentTimeMillis();
 
@@ -626,6 +641,65 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					TransferFunctionType.SIGMOID,
 					trainingSet,
 					new int[]{inputs.length, 10, outputs.length},
+					FileDataset,
+					FileNetwork + ".nnet",
+					0.01f,
+					0.2f,
+					0.7f,
+					10000000,
+					inputsLabel,
+					outputsLabel);
+
+			System.out.println("Epochs: " + iterations);
+			rna.TestNetworkMl(FileNetwork + ".nnet", trainingSet);
+
+			finish = System.currentTimeMillis();
+			timeElapsed = ((finish - start));
+			System.out.printf(Locale.US, "Time Elapsed of training:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
+
+			//target = new NetworkUtils().RamdomValues(50, 100);
+
+			// Start Neural Network
+			neural = true;
+			count = 0;
+		}
+	}
+
+	public void TestingNN(double inAngle, double inPower, double inObjDown, double inTarget, double inShotW, double inHight){
+		double[] inputs;
+		double[] outputs;
+
+		if(wave < waveTotal) {
+			status = "Trying...";
+
+			target = new NetworkUtils().RamdomValues(50, 100);
+
+			// Launcher
+			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (target / 100) });
+			System.out.println("Outputs: " + Arrays.toString(TestOutputs) + " ");
+
+			angle = (float) TestOutputs[0];
+			power = (float) TestOutputs[1] * 100;
+
+			// Meural Network
+			inputs = new double[]{ (target / 100) };
+			outputs = new double[]{ (angle), (power / 100) };
+
+			// DataSet
+			trainingSet.addRow(new DataSetRow(inputs, outputs));
+
+			// Shot object with output results
+			Shot(LauncherX, LauncherY, power, weight, angle);
+		}
+
+		if(wave == waveTotal) {
+			String[] inputsLabel = new String[]{ "Target"};
+			String[] outputsLabel = new String[]{ "Angle", "Power" };
+
+			int iterations = rna.PerceptronMLSave(
+					TransferFunctionType.SIGMOID,
+					trainingSet,
+					new int[]{1, 10, 2},
 					FileDataset,
 					FileNetwork + ".nnet",
 					0.0001f,
@@ -638,33 +712,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			System.out.println("Iterações: " + iterations);
 			rna.TestNetworkMl(FileNetwork + ".nnet", trainingSet);
 
-			finish = System.currentTimeMillis();
-			timeElapsed = ((finish - start));
-			System.out.printf(Locale.US, "Time Elapsed of training:   %03.2fs (%f)%n%n", (timeElapsed / 1000 / 60), timeElapsed );
-
-			target = new NetworkUtils().RamdomValues(50, 100);
-
-			// Start Neural Network
-			neural = true;
-			count = 0;
-		}
-	}
-
-	public void TestingNN(){
-		if(wave <= waveTotal) {
-			status = "Trying...";
-
-			target = new NetworkUtils().RamdomValues(50, 100);
-
-			// Launcher
-			double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{(target / 100)});
-			System.out.print("Outputs: " + Arrays.toString(TestOutputs) + " ");
-
-			angle = (float) TestOutputs[0];
-			power = (float) TestOutputs[1] * 100;
-
-			// Shot object with output results
-			Shot(LauncherX, LauncherY, power, weight, angle);
+			wave = 0;
 		}
 	}
 
@@ -727,10 +775,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 				float inWeight = weight;
 				float inHight = height;
 
-				System.out.print("Target: " + inTarget + " ");
-				System.out.println("ObjDown: " + inObjDown);
-
-				TestingNN();
+				//TestingNN(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
 		}
 
@@ -741,7 +786,15 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			if(count > 100){
 				count = -1;
 				System.out.println();
-				TestingNN();
+
+				float inAngle = angle;
+				float inObjDown = bodyObj.getPosition().x;
+				float inPower = power;
+				float inTarget = target;
+				float inWeight = weight;
+				float inHight = height;
+
+				//TestingNN(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
 		}
 
@@ -792,25 +845,20 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		font1.setColor(Color.WHITE);
 		font1.getData().setScale(1f, 1f);
 
-		// Default values
-		for(int i=0; i<waveTotal; i++) {
-			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
-			//arrAngles[i] = i * 0.1f;					// Incremental Angle
-			//arrAngles[i] = 0.35f;						// Fix Angle
+		// Clear NeuronNetwork and Dataset
+		new NetworkUtils().DeleteFileNN(pathDataSet + FileDataset);
+		new NetworkUtils().DeleteFileNN(pathNetwork + ".nnet" + FileNetwork);
 
-			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
-			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
-
-			//arrHight[i] = nnu.RamdomValues(2.0f, 35); // Random elevate
-		}
+		// Defaults values for shots
+		DefaultShots();
 
 		angle = (float)arrAngles[0];
 		power = (float)arrPowers[0];
 		height = (float)arrHight[0];
 
-		PreTrainner();
-		shot = false;
-		neural = true;
+		//PreTrainner();
+		//shot = false;
+		//neural = true;
 
 		// Objects
 		bodyTarget(1.0f,1.0f, target,5.0f, BodyDef.BodyType.StaticBody);
@@ -823,9 +871,9 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		status = "Please, tap or click in to the screen to start learn...";
 
 		// Start Shot
-		//Shot( LauncherX, LauncherY, power, weight, angle);
+		Shot( LauncherX, LauncherY, power, weight, angle);
 
-		wave++;
+		//wave++;
 		//System.out.println("\nShots...");
 	}
 
