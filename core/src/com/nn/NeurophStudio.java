@@ -6,6 +6,7 @@ import org.neuroph.core.data.DataSet;
 import org.neuroph.core.data.DataSetRow;
 import org.neuroph.nnet.MultiLayerPerceptron;
 import org.neuroph.nnet.Perceptron;
+import org.neuroph.nnet.learning.BackPropagation;
 import org.neuroph.nnet.learning.MomentumBackpropagation;
 import org.neuroph.util.TransferFunctionType;
 
@@ -80,6 +81,8 @@ public class NeurophStudio {
         MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(transferFunctionType, neuronsInLayers);
         myMlPerceptron.setLabel(FileNetwork);
 
+        int iterations = 0;
+
         trainingSet.setLabel(FileDataSet);
         trainingSet.save(PathDataSet + FileDataSet);
 
@@ -91,19 +94,29 @@ public class NeurophStudio {
             myMlPerceptron.getOutputNeurons().get(i).setLabel(labelOutput[i]);
         }
 
-        MomentumBackpropagation lr = (MomentumBackpropagation) myMlPerceptron.getLearningRule();
-        lr.setMomentum(momentum);
-        lr.setLearningRate(learnRate);
-        lr.setMaxError(maxError);
-        lr.setMaxIterations(maxIteration);
-        lr.setNeuralNetwork(myMlPerceptron);
+        if(momentum>0) {
+            MomentumBackpropagation lr = (MomentumBackpropagation) myMlPerceptron.getLearningRule();
+            lr.setMomentum(momentum);
+            lr.setLearningRate(learnRate);
+            lr.setMaxError(maxError);
+            lr.setMaxIterations(maxIteration);
+            lr.setNeuralNetwork(myMlPerceptron);
+            iterations = lr.getCurrentIteration();
+        }else{
+            BackPropagation lr = new BackPropagation();
+            lr.setLearningRate(learnRate);
+            lr.setMaxError(maxError);
+            lr.setNeuralNetwork(myMlPerceptron);
+            myMlPerceptron.setLearningRule(lr);
+            iterations = lr.getCurrentIteration();
+        }
 
         myMlPerceptron.learn(trainingSet);
         myMlPerceptron.save(PathNetwork + FileNetwork);
 
         //System.out.println("Error: " + lr.getTotalNetworkError());
 
-        return lr.getCurrentIteration();
+        return iterations;
     }
 
     public double[] Test(String FileNetwork, double[] input){
@@ -185,7 +198,7 @@ public class NeurophStudio {
             System.out.print("+--------------");
 
         System.out.println("+");
-        System.out.println();
+        System.out.println("Total: " + trainingSet.getRows().size() );
 
         return networkOutput;
     }
