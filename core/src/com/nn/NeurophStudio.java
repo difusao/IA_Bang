@@ -10,13 +10,7 @@ import org.neuroph.nnet.learning.BackPropagation;
 import org.neuroph.nnet.learning.MomentumBackpropagation;
 import org.neuroph.util.TransferFunctionType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class NeurophStudio {
     private String FileDataSet;
@@ -306,14 +300,29 @@ public class NeurophStudio {
         return out;
     }
 
-    private DataSetRow MenorValor(DataSet trainingSet){
+    private DataSetRow MinValue(DataSet trainingSet){
         DataSetRow row = new DataSetRow();
-        double menor = 99999999;
+        double min = 99999999;
 
         for(int i=0; i<trainingSet.getRows().size(); i++){
             double col = trainingSet.getRows().get(i).getInput()[0];
-            if(col < menor){
-                menor = col;
+            if(col < min){
+                min = col;
+                row = trainingSet.getRows().get(i);
+            }
+        }
+
+        return row;
+    }
+
+    public DataSetRow MaxValue(DataSet trainingSet){
+        DataSetRow row = new DataSetRow();
+        double max = 0;
+
+        for(int i=0; i<trainingSet.getRows().size(); i++){
+            double col = trainingSet.getRows().get(i).getInput()[0];
+            if(col > max){
+                max = col;
                 row = trainingSet.getRows().get(i);
             }
         }
@@ -327,8 +336,30 @@ public class NeurophStudio {
         int total = trainingSet.getRows().size();
 
         while(count < total) {
-            double row = MenorValor(trainingSet).getInput()[0];
-            trainingSetTMP.addRow(MenorValor(trainingSet));
+            double row = MinValue(trainingSet).getInput()[0];
+            trainingSetTMP.addRow(MinValue(trainingSet));
+
+            for (int i = 0; i < trainingSet.getRows().size(); i++) {
+                double value = trainingSet.getRows().get(i).getInput()[0];
+
+                if (row == value) {
+                    trainingSet.remove(i);
+                    break;
+                }
+            }
+
+            count++;
+        }
+
+        return trainingSetTMP;
+    }
+
+    public DataSet Best(DataSet trainingSet, int max) {
+        DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
+
+        while(trainingSetTMP.getRows().size() < max) {
+            double row = MaxValue(trainingSet).getInput()[0];
+            trainingSetTMP.addRow(MaxValue(trainingSet));
 
             for (int i = 0; i < trainingSet.getRows().size(); i++) {
                 double value = trainingSet.getRows().get(i).getInput()[0];
@@ -337,8 +368,6 @@ public class NeurophStudio {
                     break;
                 }
             }
-
-            count++;
         }
 
         return trainingSetTMP;

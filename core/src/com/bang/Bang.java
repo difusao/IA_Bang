@@ -53,7 +53,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	float timeElapsed = 0;
 
 	// AG
-	int waveTotal = 20;
+	int waveTotal = 10;
 	int wave = 0;
 	int gen = 1;
 
@@ -107,7 +107,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 	String status;
 
 	// NeuralNetwork
-	DataSet trainingSet1 = new DataSet(2, 2);
+	DataSet trainingSet1 = new DataSet(1, 2);
 	DataSet trainingSet2 = new DataSet(1, 2);
 	String FileDataset = "DataSet.tset";
 	String FileNetwork = "NewNeuralNetwork";
@@ -116,7 +116,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	NeurophStudio rna;
 	NetworkUtils nnu;
-	private boolean neural = false;
+	boolean neural = false;
+
+	boolean isCollideGround = false;
+	boolean isCollideTarget = false;
 
 	private void Rotate(float x, float y, float axe, float ang){
 
@@ -173,10 +176,9 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		for(int i=0; i<trainingSet.getRows().size(); i++) {
 			listShots.add(new Shot(
 					i,
-					trainingSet.getRows().get(i).getInput()[0],
-					Math.abs( (targetX / 100) - trainingSet.getRows().get(i).getInput()[0] )
+					Math.abs( (targetX/100 - trainingSet.getRows().get(i).getInput()[0]) ),
+					trainingSet.getRows().get(i).getInput()[0]
 			));
-			System.out.println(trainingSet.getRows().get(i).getInput()[0] + " - " + Math.abs( (targetX / 100) - trainingSet.getRows().get(i).getInput()[0] ));
 		}
 
 		List spaces = new ArrayList();
@@ -388,6 +390,9 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 	private void DefaultShots(){
 		// Default values
+		System.out.printf(Locale.US, "         ANGLE          |        POWER        %n");
+		System.out.printf(Locale.US, "------------------------+---------------------%n");
+
 		for(int i=0; i<waveTotal; i++) {
 			arrAngles[i] = nnu.RamdomValues(0, 1.3f);	// Random Angle
 			//arrAngles[i] = i * 0.1f;					// Incremental Angle
@@ -396,51 +401,56 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			arrPowers[i] = nnu.RamdomValues(6.0f, 35);	// Random power
 			//arrPowers[i] = 5.0f + i * 3.2f;			// Incremental power
 
-			//arrHight[i] = nnu.RamdomValues(2.0f, 35); // Random elevate
+			System.out.printf(Locale.US, "%02d %020.17f | %020.17f%n", i, arrAngles[i], arrPowers[i]);
 		}
+
+		System.out.println();
 	}
 
 	private void Trainner(double inAngle, double inPower, double inObjDown, double inTargetX, double inTargetY, double inShotW, double inHight) {
 
 		// Meural Network
-		String[] inputsLabel = new String[]{ "TargetX", "TargetY"};
+		String[] inputsLabel = new String[]{ "TargetX"};
 		String[] outputsLabel = new String[]{ "Angle", "Power" };
-		double[] inputs = new double[]{ (Math.abs(inTargetX - inObjDown) / 100), (inTargetY / 100) };
+		double[] inputs = new double[]{ (inObjDown / 100) };
 		double[] outputs = new double[]{ (inAngle), (inPower / 100) };
 
 		// DataSet
 		trainingSet1.addRow(new DataSetRow(inputs, outputs));
 
 		// Inputs
-		System.out.printf(Locale.US,"%02d Inputs: ", (wave - 1));
+		System.out.printf(Locale.US,"%02d Inputs: ", (wave));
 		for(int i=0; i<inputs.length; i++)
 			System.out.printf(Locale.US,"%012.8f ", inputs[i]);
 		for(int i=0; i<outputs.length;i++)
 			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
 		System.out.println();
 
-		//System.out.print("trainingSet1.addRow(new DataSetRow(new double[]{ ");
-		//for(int i=0; i<inputs.length; i++) {
-		//	System.out.printf(Locale.US, "%012.8f", inputs[i]);
-		//	if(i<inputs.length-1)
-		//		System.out.print(", ");
-		//	else
-		//		System.out.print(" }, new double[]{ ");
-		//}
-		//for(int i=0; i<outputs.length;i++) {
-		//	System.out.printf(Locale.US, "%012.8f", outputs[i]);
-		//	if(i<outputs.length-1)
-		//		System.out.print(", ");
-		//}
-		//System.out.println(" }));");
-
 		if(wave < waveTotal)
 			Shot(LauncherX, LauncherY, power, weight, angle);
 
-		if(wave == waveTotal && shot) {
-			wave = 0;
-			shot = false;
-			count = 0;
+		if(wave == waveTotal-1) {
+			wave = -1;
+			//shot = false;
+			//count = 0;
+
+			// Best by aprouch
+			//trainingSet1 = rna.Best(trainingSet1, Math.round(trainingSet1.getRows().size()/2));
+
+			//System.out.println("\nBest shots...");
+			//waveTotal = trainingSet1.getRows().size();
+			//arrAngles = new double[waveTotal];
+			//arrPowers = new double[waveTotal];
+
+			// Default values
+			//System.out.printf(Locale.US, "         ANGLE          |        POWER        %n");
+			//System.out.printf(Locale.US, "------------------------+---------------------%n");
+			//for(int i=0; i<trainingSet1.getRows().size(); i++) {
+			//	arrAngles[i] = trainingSet1.getRows().get(i).getDesiredOutput()[0];
+			//	arrPowers[i] = trainingSet1.getRows().get(i).getDesiredOutput()[1] * 100;
+			//	System.out.printf(Locale.US, "%02d %020.17f | %020.17f%n", i, arrAngles[i], arrPowers[i]);
+			//}
+			//System.out.println();
 
 			// Order by best aprouch targetX.
 			//System.out.println("\nOrder...");
@@ -449,14 +459,18 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 			//	System.out.println(i + " " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput()));
 
 			// Genetic Algoritm
-			System.out.println("Running Genetic Algoritm...");
-			AG(trainingSet1, 5.0, 0.05, 20, 100);
-			for(int i = 0; i< trainingSet1.getRows().size(); i++)
-				System.out.println(i + " " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput()));
+			//System.out.println("\nRunning Genetic Algoritm...");
+			//AG(trainingSet1, 2.5, 0.05, 20, 100);
+			//waveTotal = trainingSet1.getRows().size();
+			//for(int i = 0; i< trainingSet1.getRows().size(); i++) {
+			//	System.out.println(i + " " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput()));
+			//	arrAngles[i] = trainingSet1.getRows().get(i).getDesiredOutput()[0];
+			//	arrPowers[i] = trainingSet1.getRows().get(i).getDesiredOutput()[1] * 100;
+			//}
+			//System.out.println();
 
 			start = System.currentTimeMillis();
 			System.out.print("\nLearning... ");
-
 			int iterations = rna.PerceptronMLSave(
 					TransferFunctionType.SIGMOID,
 					trainingSet1,
@@ -466,7 +480,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 					0.01f,
 					0.2f,
 					0.7f,
-					10000000,
+					9999999,
 					inputsLabel,
 					outputsLabel);
 
@@ -479,6 +493,8 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 
 			// Start Neural Network
 			//neural = true;
+
+			count = 0;
 		}
 	}
 
@@ -509,19 +525,61 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		debugRenderer.render(world, box2DCamera.combined);
 		box2DCamera.update();
 
-		bodyTarget.setTransform(targetX, 1.0f, 0);
+		isCollideGround = CollisionBox("ground", "shot");
+		isCollideTarget = CollisionBox("alvo", "shot");
 
-		if (  CollisionBox("ground", "shot") ) {
+		bodyTarget.setTransform(targetX, targetY, 0);
+
+		if (  isCollideGround || isCollideTarget ) {
 			if (!collide) {
 				collide = true;
-				//
+
+				angle = (float)arrAngles[wave];
+				power = (float)arrPowers[wave];
+
+				float inAngle = angle;
+				float inObjDown = bodyObj.getPosition().x;
+				float inPower = power;
+				float inTargetX = targetX;
+				float inTargetY = targetY;
+				float inWeight = weight;
+				float inHight = height;
+
+				if(bodyTwer != null)
+					world.destroyBody(bodyTwer);
+
+				if(circle != null)
+					world.destroyBody(circle);
+
+				if(bodyLnchr != null)
+					world.destroyBody(bodyLnchr);
+
+				BodyTower(2, LauncherY, LauncherX, LauncherY);
+				BodyLauncher(1, 2, LauncherX, LauncherY, angle);
+				BodyBase(LauncherX, LauncherY, 2);
+
+				Trainner(inAngle, inPower, inObjDown, inTargetX, inTargetY, inWeight, inHight);
+
+				wave++;
 			}
 		}
 
-		if(CollisionBox("alvo", "shot")) {
-			if (!collide) {
-				collide = true;
-				//
+		if(count > -1){
+			count++;
+			System.out.print(".");
+
+			if(count > 100){
+				count = -1;
+				System.out.println();
+
+				float inAngle = angle;
+				float inObjDown = bodyObj.getPosition().x;
+				float inPower = power;
+				float inTarget = targetX;
+				float inWeight = weight;
+				float inHight = height;
+
+				TryingNN(inAngle, inPower, inObjDown, inTarget, inWeight, inHight);
 			}
 		}
 
@@ -587,7 +645,7 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		// Ramdom 10 shots defaults
 		DefaultShots();
 
-		Shot( LauncherX, LauncherY, power, weight, angle);
+		//Shot( LauncherX, LauncherY, power, weight, angle);
 	}
 
 
