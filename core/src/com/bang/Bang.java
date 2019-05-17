@@ -509,65 +509,24 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		debugRenderer.render(world, box2DCamera.combined);
 		box2DCamera.update();
 
-		if ((CollisionBox("ground", "shot") || CollisionBox("alvo", "shot")) && shot) {
+		bodyTarget.setTransform(targetX, 1.0f, 0);
+
+		if (  CollisionBox("ground", "shot") ) {
 			if (!collide) {
 				collide = true;
-
-				// Position targetX
-				//bodyTarget.setTransform(targetX, nnu.RamdomValues(1.0f, 10.0f), 0);
 				//
-
-				wave++;
-
-				angle = (float)arrAngles[wave-1];
-				power = (float)arrPowers[wave-1];
-
-				float inAngle = angle;
-				float inObjDown = bodyObj.getPosition().x;
-				float inPower = power;
-				float inTargetX = targetX;
-				float inTargetY = targetY;
-				float inWeight = weight;
-				float inHight = height;
-
-				if(bodyTwer != null)
-					world.destroyBody(bodyTwer);
-
-				if(circle != null)
-					world.destroyBody(circle);
-
-				if(bodyLnchr != null)
-					world.destroyBody(bodyLnchr);
-
-				BodyTower(2, LauncherY, LauncherX, LauncherY);
-				BodyLauncher(1, 2, LauncherX, LauncherY, angle);
-				BodyBase(LauncherX, LauncherY, 2);
-
-				Trainner(inAngle, inPower, inObjDown, inTargetX, inTargetY, inWeight, inHight);
 			}
 		}
 
 		if(CollisionBox("alvo", "shot")) {
 			if (!collide) {
 				collide = true;
-
-				float inAngle = angle;
-				float inObjDown = bodyObj.getPosition().x;
-				float inPower = power;
-				float inTargetX = targetX;
-				float inTargetY = targetY;
-				float inWeight = weight;
-				float inHight = height;
-
-				double[] inputs = new double[]{ (inObjDown / 100), (inObjDown / 100) };
-				double[] outputs = new double[]{ (inAngle), (inPower / 100) };
-
-				// DataSet
-				trainingSet1.addRow(new DataSetRow(inputs, outputs));
+				//
 			}
 		}
 
 		PanelInfo();
+
 		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 	}
 
@@ -625,31 +584,10 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
 		BodyGround(WIDTH / 2, 0, 0, 0, true);
 		Rotate(LauncherX, LauncherY, 4, angle);
 
-		// Pre Trainner
-		//PreTrainner(new int[]{1, 10, 2}, 0.001f,0.2f,0.7f,10000000);
-
-		// Start Shot
-		//System.out.println("Tryinng Shots on preTrainner...");
-		//double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (targetX / 100) });
-		//System.out.println("Target: " + (targetX / 100) + " Angle: " + TestOutputs[0] + " Power: " + (TestOutputs[1] * 100) );
-
-		//angle = (float) TestOutputs[0];
-		//power = (float) TestOutputs[1] * 100;
-
-		//Rotate(LauncherX, LauncherY, 4, angle);
-		//System.out.println();
-
-		// Defaults values for shots
+		// Ramdom 10 shots defaults
 		DefaultShots();
-		angle = (float)arrAngles[0];
-		power = (float)arrPowers[0];
+
 		Shot( LauncherX, LauncherY, power, weight, angle);
-
-		shot = true;
-		neural = false;
-
-		// Position targetX
-		bodyTarget.setTransform(targetX, nnu.RamdomValues(1.0f, 10.0f), 0);
 	}
 
 
