@@ -10,6 +10,7 @@ import org.neuroph.nnet.learning.BackPropagation;
 import org.neuroph.nnet.learning.MomentumBackpropagation;
 import org.neuroph.util.TransferFunctionType;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 public class NeurophStudio {
@@ -64,6 +65,68 @@ public class NeurophStudio {
         myMlPerceptron.calculate();
 
         return myMlPerceptron.getOutput()[0];
+    }
+
+    public void CreateMLP(int[] neuronsInLayers, String FileNetwork){
+        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, neuronsInLayers);
+        myMlPerceptron.setLabel(FileNetwork);
+        myMlPerceptron.save(PathNetwork + FileNetwork);
+    }
+
+    public double[] MLP(DataSetRow dataRow, int[] neuronsInLayers, float maxError, float learnRate, String FileNetwork){
+
+        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, neuronsInLayers);
+        myMlPerceptron.setLabel(FileNetwork);
+
+        BackPropagation lr = new BackPropagation();
+        lr.setLearningRate(learnRate);
+        lr.setMaxError(maxError);
+        lr.setNeuralNetwork(myMlPerceptron);
+
+        myMlPerceptron.setLearningRule(lr);
+        myMlPerceptron.save(PathNetwork + FileNetwork);
+
+        NeuralNetwork loadedPerceptron = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        loadedPerceptron.setInput(dataRow.getInput());
+        loadedPerceptron.calculate();
+
+        return loadedPerceptron.getOutput();
+    }
+
+    public double[] MLPGetweights(DataSetRow dataRow, int[] neuronsInLayers, float maxError, float learnRate, String FileNetwork){
+
+        MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, neuronsInLayers);
+        myMlPerceptron.setLabel(FileNetwork);
+
+        BackPropagation lr = new BackPropagation();
+        lr.setLearningRate(learnRate);
+        lr.setMaxError(maxError);
+        lr.setNeuralNetwork(myMlPerceptron);
+
+        myMlPerceptron.setLearningRule(lr);
+        myMlPerceptron.save(PathNetwork + FileNetwork);
+
+        NeuralNetwork loadedPerceptron = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        loadedPerceptron.setInput(dataRow.getInput());
+        loadedPerceptron.calculate();
+
+        System.out.println(Arrays.toString(loadedPerceptron.getOutput()));
+
+        int total = myMlPerceptron.getWeights().length;
+        int k= 0;
+        double[] w = new double[total];
+
+        for(int h=1; h<myMlPerceptron.getLayers().size(); h++) {
+            for (int i = 0; i < myMlPerceptron.getLayerAt(h).getNeurons().size(); i++) {
+                for (int j = 0; j < myMlPerceptron.getLayerAt(h).getNeurons().get(i).getWeights().length; j++) {
+                    Object o = myMlPerceptron.getLayerAt(h).getNeurons().get(i).getWeights()[j];
+                    w[k] = (double) ((Weight) o).getValue();
+                    k++;
+                }
+            }
+        }
+
+        return w;
     }
 
     public int PerceptronMLSave(TransferFunctionType transferFunctionType, DataSet trainingSet,
@@ -315,13 +378,13 @@ public class NeurophStudio {
         return row;
     }
 
-    public DataSetRow MaxValue(DataSet trainingSet){
+    public DataSetRow MaxValue(DataSet trainingSet, double limit){
         DataSetRow row = new DataSetRow();
         double max = 0;
 
         for(int i=0; i<trainingSet.getRows().size(); i++){
             double col = trainingSet.getRows().get(i).getInput()[0];
-            if(col > max){
+            if(col > max && col <= limit){
                 max = col;
                 row = trainingSet.getRows().get(i);
             }
@@ -354,12 +417,12 @@ public class NeurophStudio {
         return trainingSetTMP;
     }
 
-    public DataSet Best(DataSet trainingSet, int max) {
+    public DataSet Best(DataSet trainingSet, int max, double limit) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
 
         while(trainingSetTMP.getRows().size() < max) {
-            double row = MaxValue(trainingSet).getInput()[0];
-            trainingSetTMP.addRow(MaxValue(trainingSet));
+            double row = MaxValue(trainingSet, limit).getInput()[0];
+            trainingSetTMP.addRow(MaxValue(trainingSet, limit));
 
             for (int i = 0; i < trainingSet.getRows().size(); i++) {
                 double value = trainingSet.getRows().get(i).getInput()[0];
