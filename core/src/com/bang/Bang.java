@@ -319,8 +319,6 @@ public class Bang extends ApplicationAdapter implements InputProcessor {
                         neural = true;
                 }
             }
-
-
         }
 
         PanelInfo();

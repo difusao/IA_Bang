@@ -435,8 +435,9 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 		System.out.println();
 	}
 
-	private double[] RamdomWeights(double[] mlpWeights){
-		for(int i=0; i<mlpWeights.length; i++){
+	private double[] RamdomWeights(int length){
+		double[] mlpWeights = new double[length];
+		for(int i=0; i<length; i++){
 			mlpWeights[i] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
 		}
 
@@ -581,7 +582,10 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 		bodyTarget.setTransform(targetX, targetY, 0);
 
-		if ( wave < waveTotal && (isCollideGround || isCollideTarget) && !test) {
+		//if(bodyObj.getPosition().x > 200)
+		//	Shot( LauncherX, LauncherY, power, weight, angle);
+
+		if ( wave <= waveTotal && (isCollideGround || isCollideTarget) && !test) {
 			if (!collide) {
 				collide = true;
 
@@ -594,31 +598,13 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 					// Test news weights
 					//double[] mlpWeights = rna.getWeights(FileNetwork + ".nnet");
-
-					rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-					System.out.println("Set weights[" + wave + "]: " + Arrays.toString(rndWeights[wave]));
-					//for(int i=0; i<mlpWeights.length; i++)
-					//	System.out.printf(Locale.US, "%02d %013.10f%n", i, mlpWeights[i]);
-					//System.out.println(Arrays.toString(rndWeights[wave]));
-					//System.out.println();
-
-					double[] input = trainingSet1.getRows().get(0).getInput();
-					double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", input);
-					//System.out.println("Input: "+ Arrays.toString(input) + " Output: "+Arrays.toString(outputNewWeight));
-
-					angle = (float)outputNewWeight[0];
-					power = (float)outputNewWeight[1] * 100;
-
-					Shot( LauncherX, LauncherY, power, weight, angle);
-					wave++;
+					//TrainnerWeightsNN(targetX, targetY, weight, height, angle, power, bodyObj.getPosition().x);
 				}else{
-					//System.out.printf(Locale.US,"%012.8f, %012.8f, %012.8f%n", bodyObj.getPosition().x, angle, power);
 					TrainnerNN(targetX, targetY, weight, height, angle, power, bodyObj.getPosition().x);
 
 					angle = (float) arrAngles[wave];
 					power = (float) arrPowers[wave];
 
-					wave++;
 					Shot( LauncherX, LauncherY, power, weight, angle);
 
 					/*
@@ -652,6 +638,47 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 		world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 	}
 
+	private void TrainnerWeightsNN(float inTargetX, float inTargetY, float inWeight, float inHight, float inAngle, float inPower, float inObjDown) {
+		// Meural Network
+		double maxPower = 0.50f;
+		if(inPower > maxPower)
+			inPower = 0.50f;
+
+		String[] inputsLabel = new String[]{ "TargetX"};
+		String[] outputsLabel = new String[]{ "Angle", "Power" };
+		double[] inputs = trainingSet2.getRows().get(0).getInput();
+		double[] outputs = new double[]{ (inAngle), (inPower/100) };
+
+		// DataSet
+		trainingSet1.addRow(new DataSetRow(inputs, outputs));
+
+		// Inputs
+		//System.out.printf(Locale.US,"%02d Inputs: ", (wave));
+		//for(int i=0; i<inputs.length; i++)
+		//	System.out.printf(Locale.US,"%012.8f ", inputs[i]);
+		for(int i=0; i<outputs.length; i++)
+			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
+		System.out.println();
+
+		rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
+		System.out.println("Set weights[" + (wave) + "]: " + Arrays.toString(rndWeights[wave]));
+
+		// Test input new values weights
+		double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", inputs);
+		System.out.println("Input: "+ Arrays.toString(inputs) + " Output: "+Arrays.toString(outputNewWeight));
+
+		angle = (float)outputNewWeight[0];
+		power = (float)outputNewWeight[1] * 100;
+
+		Shot( LauncherX, LauncherY, power, weight, angle);
+
+		if(wave == waveTotal) {
+
+		}
+
+		//wave++;
+	}
+
 	private void TrainnerNN(float inTargetX, float inTargetY, float inWeight, float inHight, float inAngle, float inPower, float inObjDown) {
 
 		// Meural Network
@@ -671,38 +698,47 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 			System.out.printf(Locale.US,"Outputs: %012.8f ", outputs[i]);
 		System.out.println();
 
-		if(wave == waveTotal-1) {
+		if(wave<waveTotal)
+			wave++;
+
+		if(wave == waveTotal) {
 			// Best by aprouch
-			trainingSet1 = rna.Best(trainingSet1, Math.round((float)trainingSet1.getRows().size() * best), (inTargetX/100+0.05));
-			System.out.print("\nBest shots... ");
+			trainingSet2 = rna.Best(trainingSet1, Math.round((float)trainingSet1.getRows().size() * best), (inTargetX/100+0.05));
+			System.out.println("\nBest shots... " + Arrays.toString(trainingSet2.getRows().get(0).getInput()) + ", " + Arrays.toString(trainingSet2.getRows().get(0).getDesiredOutput()));
 			//for(int i=0; i<waveTotal; i++)
 			//	for(int j=0; j<trainingSet1.getRows().size(); j++)
 			//		if(arrAngles[i] == trainingSet1.getRows().get(j).getInput()[0])
 			//			System.out.println(i + " " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) + ", " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput()));
-			System.out.println(Arrays.toString(trainingSet1.getRows().get(0).getInput()) + ", " + Arrays.toString(trainingSet1.getRows().get(0).getDesiredOutput()));
-			System.out.println();
+			//System.out.println(Arrays.toString(trainingSet2.getRows().get(0).getInput()) + ", " + Arrays.toString(trainingSet2.getRows().get(0).getDesiredOutput()));
+			//System.out.println();
 
 			// Create NN
 			rna.CreateMLP(new int[]{1, 6, 2}, FileNetwork + ".nnet");
-			//System.out.println("Outputs: " + Arrays.toString(output)+"\n");
 
-			// Get Weihts
+			// Get Weights
 			double[] mlpWeights = rna.getWeights(FileNetwork + ".nnet");
+			System.out.println("Weights now("+mlpWeights.length+"): " + Arrays.toString(mlpWeights));
 			//for(int i=0; i<mlpWeights.length; i++)
 			//	System.out.printf(Locale.US, "%02d %013.10f%n", i, mlpWeights[i]);
 			//System.out.println();
 
 			// Set Weight Ramdom Weights
 			for(int i=0; i<waveTotal; i++)
-				rndWeights[i] = RamdomWeights(mlpWeights);
+				if (Math.random() < 0.5)
+					rndWeights[i] = mlpWeights;
+				else
+					rndWeights[i] = RamdomWeights(mlpWeights.length);
 
+
+
+			trainingSet1.clear();
 			DiscoverWeights = true;
 			wave = 0;
 
 			//Shot( LauncherX, LauncherY, power, weight, angle);
 
 			// Test news weights
-			/*
+
 			double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", trainingSet1.getRows().get(0).getInput());
 			System.out.println("New output: "+Arrays.toString(outputNewWeight)+"\n");
 
@@ -711,7 +747,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 			Rotate(LauncherX, LauncherY, 4, angle);
 			Shot( LauncherX, LauncherY, power, weight, angle);
-			*/
+
 
             /*
 			start = System.currentTimeMillis();

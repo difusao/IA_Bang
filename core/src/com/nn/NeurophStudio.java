@@ -389,7 +389,6 @@ public class NeurophStudio {
                 row = trainingSet.getRows().get(i);
             }
         }
-
         return row;
     }
 
@@ -410,10 +409,8 @@ public class NeurophStudio {
                     break;
                 }
             }
-
             count++;
         }
-
         return trainingSetTMP;
     }
 
