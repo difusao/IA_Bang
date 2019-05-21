@@ -380,6 +380,7 @@ public class NeurophStudio {
 
     public DataSetRow MaxValue(DataSet trainingSet, double limit){
         DataSetRow row = new DataSetRow();
+        row.setInput(new double[]{0});
         double max = 0;
 
         for(int i=0; i<trainingSet.getRows().size(); i++){
@@ -416,15 +417,16 @@ public class NeurophStudio {
 
     public DataSet Best(DataSet trainingSet, int max, double limit) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
+        DataSet trainingSetBKP = trainingSet;
 
         while(trainingSetTMP.getRows().size() < max) {
-            double row = MaxValue(trainingSet, limit).getInput()[0];
+            double row = MaxValue(trainingSetBKP, limit).getInput()[0];
             trainingSetTMP.addRow(MaxValue(trainingSet, limit));
 
-            for (int i = 0; i < trainingSet.getRows().size(); i++) {
-                double value = trainingSet.getRows().get(i).getInput()[0];
+            for (int i = 0; i < trainingSetBKP.getRows().size(); i++) {
+                double value = trainingSetBKP.getRows().get(i).getInput()[0];
                 if (row == value) {
-                    trainingSet.remove(i);
+                    trainingSetBKP.remove(i);
                     break;
                 }
             }
