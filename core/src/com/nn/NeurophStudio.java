@@ -417,18 +417,24 @@ public class NeurophStudio {
 
     public DataSet Best(DataSet trainingSet, int max, double limit) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
-        DataSet trainingSetBKP = trainingSet;
+        DataSet trainingSetBKP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
+
+        for (int i=0; i<trainingSet.getRows().size(); i++)
+            trainingSetBKP.addRow(trainingSet.getRows().get(i));
 
         while(trainingSetTMP.getRows().size() < max) {
-            double row = MaxValue(trainingSetBKP, limit).getInput()[0];
-            trainingSetTMP.addRow(MaxValue(trainingSet, limit));
+            DataSetRow DsRow = MaxValue(trainingSetBKP, limit);
+            if(DsRow.getInput()[0] != 0) {
+                trainingSetTMP.addRow(DsRow);
 
-            for (int i = 0; i < trainingSetBKP.getRows().size(); i++) {
-                double value = trainingSetBKP.getRows().get(i).getInput()[0];
-                if (row == value) {
-                    trainingSetBKP.remove(i);
-                    break;
+                for (int i = 0; i < trainingSetBKP.getRows().size(); i++) {
+                    double value = trainingSetBKP.getRows().get(i).getInput()[0];
+
+                    if (DsRow.getInput()[0] <= value)
+                        trainingSetBKP.remove(i);
                 }
+            }else{
+                break;
             }
         }
 
