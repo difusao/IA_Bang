@@ -230,6 +230,7 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
                 );
             }
             System.out.println();
+            Gdx.app.exit();
         }
     }
 
@@ -358,17 +359,17 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;
         Shot(LauncherX, LauncherY, power, weight, angle);
-        /*
-        trainingSet1.addRow(new DataSetRow(new double[]{ 0.4332537353038788 }, new double[]{ 000.64899182, 000.16062449 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 0.43361473083496094 }, new double[]{ 001.26450837, 000.31918386 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.408557415008545 }, new double[]{ 001.05931032, 000.25987432 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.4738792181015015 }, new double[]{ 000.59274757, 000.08821141 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 2.7103426456451416 }, new double[]{ 000.21328776, 000.13846851 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 0.3873995542526245 }, new double[]{ 000.41088295, 000.23817520 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.8584004640579224 }, new double[]{ 000.86217695, 000.17242796 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.505852460861206 }, new double[]{ 000.23241945, 000.15341789 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.2938034534454346 }, new double[]{ 000.19333835, 000.10510767 }));
-        trainingSet1.addRow(new DataSetRow(new double[]{ 1.4433842897415161 }, new double[]{ 001.10853362, 000.21803848 }));
+
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.6788194179534912 }, new double[]{ 000.64899182, 000.16062449 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.5454935431480408 }, new double[]{ 001.26450837, 000.31918386 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 3.324920892715454 }, new double[]{ 001.05931032, 000.25987432 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.8014276027679443 }, new double[]{ 000.59274757, 000.08821141 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 2.0827553272247314 }, new double[]{ 000.21328776, 000.13846851 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.42206576466560364 }, new double[]{ 000.41088295, 000.23817520 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 3.6001546382904053 }, new double[]{ 000.86217695, 000.17242796 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.45471516251564026 }, new double[]{ 000.23241945, 000.15341789 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 2.889315128326416 }, new double[]{ 000.19333835, 000.10510767 }));
+        trainingSet1.addRow(new DataSetRow(new double[]{ 0.9622412323951721 }, new double[]{ 001.10853362, 000.21803848 }));
 
         for(int i=0; i<trainingSet1.getRows().size(); i++){
             System.out.println(i + " " +
@@ -394,7 +395,7 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
             );
         }
         System.out.println();
-        */
+        Gdx.app.exit();
     }
 
     @Override

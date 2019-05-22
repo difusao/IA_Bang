@@ -417,6 +417,20 @@ public class NeurophStudio {
 
     public DataSet Best(DataSet trainingSet, int max, double limit) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
+
+        double[] objdown = new double[trainingSetTMP.getRows().size()];
+
+        for(int i=0; i<trainingSetTMP.getRows().size(); i++)
+            objdown[i] = trainingSetTMP.getRows().get(i).getInput()[0];
+        
+
+
+        return trainingSetTMP;
+    }
+
+    /*
+    public DataSet Best(DataSet trainingSet, int max, double limit) {
+        DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
         DataSet trainingSetBKP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
 
         for (int i=0; i<trainingSet.getRows().size(); i++)
@@ -440,4 +454,5 @@ public class NeurophStudio {
 
         return trainingSetTMP;
     }
+    */
 }
