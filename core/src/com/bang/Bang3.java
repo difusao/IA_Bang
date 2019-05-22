@@ -357,7 +357,7 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX});
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;
-        //Shot(LauncherX, LauncherY, power, weight, angle);
+        Shot(LauncherX, LauncherY, power, weight, angle);
         /*
         trainingSet1.addRow(new DataSetRow(new double[]{ 0.4332537353038788 }, new double[]{ 000.64899182, 000.16062449 }));
         trainingSet1.addRow(new DataSetRow(new double[]{ 0.43361473083496094 }, new double[]{ 001.26450837, 000.31918386 }));
