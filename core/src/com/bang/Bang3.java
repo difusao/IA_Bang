@@ -132,15 +132,26 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         double[][] weights = new double[rows][cols];
 
         for(int i=0; i<rows; i++) {
+            int p = nnu.RamdomValuesInt(rowWeights.length);
+            for (int j=0; j<cols; j++) {
+                if (Math.random() < mut) {
+                    weights[i][j] = 1.00000;//rowWeights[p][j];
+                }else{
+                    weights[i][j] = 0.00000000;//nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+                }
+            }
+            /*
             int t = rowWeights.length;
             int p = nnu.RamdomValuesInt(t);
             for (int j=0; j<cols; j++) {
                 if (Math.random() > mut) {
-                    weights[i][j] = 0;
+                    weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
                 } else {
-                    weights[i][j] = rowWeights[i][j];
+                    weights[i][j] = 0;
+                    //weights[i][j] = rowWeights[i][j];
                 }
             }
+            */
         }
 
         /*
@@ -277,6 +288,13 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
 
             // Clone weights
             CloneWeights(waveTotal,26, rowWeights, 0.05f);
+
+            for(int i=0; i< rndWeights.length; i++) {
+                System.out.printf(Locale.US, "%02d)", i);
+                for (int j = 0; j < rndWeights[i].length; j++)
+                    System.out.printf(Locale.US, " %07.4f", rndWeights[i][j]);
+                System.out.println();
+            }
         }
     }
 
