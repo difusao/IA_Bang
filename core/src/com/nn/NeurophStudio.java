@@ -417,42 +417,23 @@ public class NeurophStudio {
 
     public DataSet Best(DataSet trainingSet, int max, double limit) {
         DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
-
-        double[] objdown = new double[trainingSetTMP.getRows().size()];
-
-        for(int i=0; i<trainingSetTMP.getRows().size(); i++)
-            objdown[i] = trainingSetTMP.getRows().get(i).getInput()[0];
-        
-
-
-        return trainingSetTMP;
-    }
-
-    /*
-    public DataSet Best(DataSet trainingSet, int max, double limit) {
-        DataSet trainingSetTMP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
         DataSet trainingSetBKP = new DataSet(trainingSet.getInputSize(), trainingSet.getOutputSize());
 
-        for (int i=0; i<trainingSet.getRows().size(); i++)
-            trainingSetBKP.addRow(trainingSet.getRows().get(i));
+        for(int i=0; i<trainingSet.getRows().size(); i++)
+            trainingSetTMP.addRow(trainingSet.getRows().get(i));
 
-        while(trainingSetTMP.getRows().size() < max) {
-            DataSetRow DsRow = MaxValue(trainingSetBKP, limit);
-            if(DsRow.getInput()[0] != 0) {
-                trainingSetTMP.addRow(DsRow);
-
-                for (int i = 0; i < trainingSetBKP.getRows().size(); i++) {
-                    double value = trainingSetBKP.getRows().get(i).getInput()[0];
-
-                    if (DsRow.getInput()[0] <= value)
-                        trainingSetBKP.remove(i);
+        for (int i=0; i<max; i++) {
+            double val = 0;
+            for (int j=0; j<trainingSetTMP.getRows().size(); j++) {
+                double value = trainingSetTMP.getRows().get(j).getInput()[0];
+                if (value>val && value<=limit+0.05f) {
+                    val = value;
+                    trainingSetBKP.addRow(trainingSetTMP.getRows().get(j));
+                    trainingSetTMP.remove(j);
                 }
-            }else{
-                break;
             }
         }
 
-        return trainingSetTMP;
+        return trainingSetBKP;
     }
-    */
 }
