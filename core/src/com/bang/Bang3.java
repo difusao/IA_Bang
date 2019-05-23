@@ -118,12 +118,42 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
     double[][] rndWeights;
     int layers[] = new int[]{1, 6, 2};
 
-    private double[][] RamdomWeights(int x, int y){
-        double[][] weights = new double[x][y];
+    private double[][] RamdomWeights(int rows, int cols){
+        double[][] weights = new double[rows][cols];
 
-        for(int i=0; i<x; i++)
-            for(int j=0; j<y; j++)
+        for(int i=0; i<rows; i++)
+            for(int j=0; j<cols; j++)
                 weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+
+        return weights;
+    }
+
+    private double[][] CloneWeights(int rows, int cols, double[][] rowWeights, double mut){
+        double[][] weights = new double[rows][cols];
+
+        for(int i=0; i<rows; i++) {
+            int t = rowWeights.length;
+            int p = nnu.RamdomValuesInt(t);
+            for (int j=0; j<cols; j++) {
+                if (Math.random() > mut) {
+                    weights[i][j] = 0;
+                } else {
+                    weights[i][j] = rowWeights[i][j];
+                }
+            }
+        }
+
+        /*
+        for(int i=0; i<rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (Math.random() < mut) {
+                    weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+                } else {
+                    weights[i][j] = rowWeights[i][j];
+                }
+            }
+        }
+        */
 
         return weights;
     }
@@ -182,14 +212,15 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         if(wave < waveTotal) {
             // Set Weights
             rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-            //for(int i=0; i<rndWeights[wave].length; i++)
-            //    System.out.printf(Locale.US, "%02d %020.17f%n", i, rndWeights[wave][i]);
-            //System.out.println();
+            for(int i=0; i<rndWeights[wave].length; i++)
+                System.out.printf(Locale.US, "%02d %020.17f ", i, rndWeights[wave][i]);
+            System.out.println();
 
             // Test input new values weights
             double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{inTargetX});
-            //System.out.println(wave + ") Input: " + Arrays.toString(new double[]{ inObjDown }) + " Output: " + Arrays.toString(outputNewWeight));
-            //System.out.println();
+            System.out.println(wave + ") Input: " + Arrays.toString(new double[]{ inObjDown }) + " Output: " + Arrays.toString(outputNewWeight));
+            System.out.println();
+
             angle = (float) outputNewWeight[0];
             power = (float) outputNewWeight[1] * 100;
             double[] inputs = new double[]{ (inObjDown/100) };
@@ -202,34 +233,50 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         }
 
         if(wave == waveTotal){
-            //System.out.println("Terminou!");
-            for(int i=0; i<trainingSet1.getRows().size(); i++){
-                System.out.println(i + " " +
-                        "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
-                        " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
-                );
-            }
-            System.out.println();
 
-            //trainingSet2 = rna.Best(trainingSet1, 3, (inTargetX/100));
-            int maxi = Math.round(trainingSet1.getRows().size() * percentsel);
-            System.out.println("Total: " + maxi);
-            trainingSet2 = rna.Best(trainingSet1, maxi, (inTargetX/100));
-            for(int i=0; i<trainingSet2.getRows().size(); i++){
-                System.out.println(i + " " +
-                        "Input: " + Arrays.toString(trainingSet2.getRows().get(i).getInput()) +
-                        " Output: " + Arrays.toString(trainingSet2.getRows().get(i).getDesiredOutput())
-                );
-            }
-            System.out.println();
+            //for(int i=0; i<trainingSet1.getRows().size(); i++)
+            //    System.out.println(i + " " +
+            //            "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
+            //            " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
+            //    );
+            //System.out.println();
 
             //for(int i=0; i<trainingSet1.getRows().size(); i++){
-                //System.out.println(i + " " +
-                //        "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
-                //        " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
-                //);
+            //    System.out.println(i + " " +
+            //            "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
+            //            " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
+            //    );
             //}
             //System.out.println();
+
+            // Select best shots
+            int maxi = Math.round(trainingSet1.getRows().size() * percentsel);
+            double limit = (inTargetX/100);
+
+            System.out.println("Total: " + maxi);
+            trainingSet2 = rna.Best(trainingSet1, maxi, limit);
+
+            double[][] rowWeights = new double[trainingSet2.getRows().size()][26];
+
+            for(int i=0; i<trainingSet1.getRows().size(); i++){
+                for(int j=0; j<trainingSet2.getRows().size(); j++){
+                    if(trainingSet1.getRows().get(i).getInput()[0] == trainingSet2.getRows().get(j).getInput()[0]){
+                        System.out.println("Weights[" + i + "]: " + Arrays.toString(rndWeights[i]));
+                        System.out.println(i + ") " + "Input: " + Arrays.toString(trainingSet2.getRows().get(j).getInput()) + " Output: " + Arrays.toString(trainingSet2.getRows().get(j).getDesiredOutput()) );
+                        System.out.println();
+                        rowWeights[j] = rndWeights[i];
+                    }
+                }
+            }
+            System.out.println();
+
+            //for(int i=0; i<trainingSet2.getRows().size(); i++){
+            //    System.out.println(i + " " + "Input: " + Arrays.toString(trainingSet2.getRows().get(i).getInput()) + " Output: " + Arrays.toString(trainingSet2.getRows().get(i).getDesiredOutput()) );
+            //}
+            //System.out.println();
+
+            // Clone weights
+            CloneWeights(waveTotal,26, rowWeights, 0.05f);
         }
     }
 
@@ -347,7 +394,7 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
         BodyTower(2, LauncherY, LauncherX, LauncherY);
         BodyLauncher(1, 2, LauncherX, LauncherY, angle);
         BodyBase(LauncherX, LauncherY, 2);
-        BodyGround(WIDTH / 2, 0, 0, 0, true);
+        BodyGround(WIDTH, 0, 0, 0, true);
         Rotate(LauncherX, LauncherY, 4, angle);
 
         // Defaults weights ramdoms
@@ -396,8 +443,9 @@ public class Bang3 extends ApplicationAdapter implements InputProcessor {
             );
         }
         System.out.println();
-        Gdx.app.exit();
         */
+        //System.out.println(">>>>>>> " + nnu.RamdomValuesInt(10));
+        //Gdx.app.exit();
     }
 
     @Override

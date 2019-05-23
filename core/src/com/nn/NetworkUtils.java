@@ -14,9 +14,9 @@ public class NetworkUtils {
         return min + (max - min) * b.nextFloat();
     }
 
-    public int RamdomValuesInt(int  min, int  max){
+    public int RamdomValuesInt(int max){
         Random b = new Random();
-        return min + (max - min) * b.nextInt();
+        return b.nextInt(max);
     }
 
     public double RamdomValuesDouble(double  min, double  max){
