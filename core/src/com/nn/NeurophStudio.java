@@ -363,12 +363,27 @@ public class NeurophStudio {
         return out;
     }
 
-    private DataSetRow MinValue(DataSet trainingSet){
+    public DataSetRow MinValue(DataSet trainingSet){
         DataSetRow row = new DataSetRow();
         double min = 99999999;
 
         for(int i=0; i<trainingSet.getRows().size(); i++){
             double col = trainingSet.getRows().get(i).getInput()[0];
+            if(col < min){
+                min = col;
+                row = trainingSet.getRows().get(i);
+            }
+        }
+
+        return row;
+    }
+
+    public DataSetRow MinValueSpace(DataSet trainingSet, double limit){
+        DataSetRow row = new DataSetRow();
+        double min = 99999999;
+
+        for(int i=0; i<trainingSet.getRows().size(); i++){
+            double col = Math.abs(trainingSet.getRows().get(i).getInput()[0]-limit);
             if(col < min){
                 min = col;
                 row = trainingSet.getRows().get(i);
@@ -426,7 +441,7 @@ public class NeurophStudio {
             double val = 0;
             for (int j=0; j<trainingSetTMP.getRows().size(); j++) {
                 double value = trainingSetTMP.getRows().get(j).getInput()[0];
-                if (value>val && value<=limit+0.05f) {
+                if (value>val && value<=limit+0.10f) {
                     val = value;
                     trainingSetBKP.addRow(trainingSetTMP.getRows().get(j));
                     trainingSetTMP.remove(j);
