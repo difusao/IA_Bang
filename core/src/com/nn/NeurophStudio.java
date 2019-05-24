@@ -180,8 +180,11 @@ public class NeurophStudio {
         NeuralNetwork loadedPerceptron = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
         loadedPerceptron.setInput(input);
         loadedPerceptron.calculate();
+        loadedPerceptron.save(PathNetwork + FileNetwork);
+
         double[] networkOutput = new double[input.length];
         networkOutput = loadedPerceptron.getOutput();
+        //System.out.println("Save on: " + PathNetwork + FileNetwork);
 
         return networkOutput;
     }

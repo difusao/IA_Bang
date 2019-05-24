@@ -209,10 +209,16 @@ public class Bang3 extends ApplicationAdapter{
         rndWeights = RamdomWeights(waveTotal,26);
 
         // Start Shtos
+        //double[] testW = new double[]{0.16596972942352295, -0.6451693773269653, 0.3397611379623413, -0.5836633443832397, -0.2681492567062378, 0.407647967338562, -0.7288495302200317, -0.901965856552124, 0.9155457019805908, 0.15820980072021484, 0.3644449710845947, -0.9228442907333374, -0.5861966609954834, 0.3753688335418701, 0.49698948860168457, 0.5794743299484253, 0.05732583999633789, 0.20679700374603271, 0.854007363319397, 0.8561968803405762, 0.8100053071975708, 0.1521681547164917, -0.9717065095901489, -0.9068574905395508, -0.9560844898223877, -0.13161170482635498};
         rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-        double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX});
+        //rna.setWeights(FileNetwork + ".nnet", testW);
+
+        double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX/100});
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;
+        //System.out.println("Target:                      " + (targetX/100) );
+        //System.out.println("First Shot TestW:           " + Arrays.toString(rndWeights[wave]));
+        //System.out.println("First Shot outputNewWeight: " + Arrays.toString(outputNewWeight));
         Shot(LauncherX, LauncherY, power, weight, angle);
 
         /*
@@ -369,12 +375,11 @@ public class Bang3 extends ApplicationAdapter{
 
         if(wave < waveTotal) {
 
-
                 // Set Weights
                 rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
                 System.out.printf(Locale.US, "%02d) ", wave);
                 for (int i = 0; i < rndWeights[wave].length; i++)
-                    System.out.printf(Locale.US, "%06.3f ", rndWeights[wave][i]);
+                    System.out.printf(Locale.US, "%20.17f ", rndWeights[wave][i]);
                 //System.out.println();
 
                 // Test input new values weights
@@ -410,7 +415,7 @@ public class Bang3 extends ApplicationAdapter{
             //System.out.println();
 
             // Select best shots
-            int maxi = 1; //Math.round(trainingSet1.getRows().size() * percentsel);
+            //int maxi = 1; //Math.round(trainingSet1.getRows().size() * percentsel);
             double limit = (inTargetX/100);
 
             //trainingSet2 = rna.Best(trainingSet1, maxi, limit);
@@ -439,35 +444,32 @@ public class Bang3 extends ApplicationAdapter{
             // Clone weights
             System.out.println("Clone");
             rndWeights = CloneWeights(waveTotal,26, rowWeights, 0.05f);
-
             for(int i=0; i< rndWeights.length; i++) {
                 System.out.printf(Locale.US, "%02d)", i);
                 for (int j = 0; j < rndWeights[i].length; j++)
-                    System.out.printf(Locale.US, " %07.4f", rndWeights[i][j]);
+                    System.out.printf(Locale.US, " %20.17f", rndWeights[i][j]);
                 System.out.println();
             }
             System.out.println();
 
             wave = 0;
 
-            // New shot
-            // Set Weights
+            // New shot, Set Weights
             System.out.println("Test shot");
             System.out.printf(Locale.US, "%02d) ", wave);
             rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
             for(int i=0; i<rndWeights[wave].length; i++)
                 System.out.printf(Locale.US, "%020.17f ", rndWeights[wave][i]);
             System.out.println();
-
             // Test input new values weights
-            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{inTargetX/100});
-            System.out.println(wave + ") Input: " + Arrays.toString(new double[]{ inObjDown }) + " Output: " + Arrays.toString(outputNewWeight));
-            System.out.println();
-
+            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX/100});
             angle = (float) outputNewWeight[0];
             power = (float) outputNewWeight[1] * 100;
-            double[] inputs = new double[]{ (inObjDown/100) };
-            double[] outputs = new double[]{ angle, (power/100) };
+
+            System.out.println(wave + ") Input: " + Arrays.toString(new double[]{ inObjDown/100 }) + " Output: " + Arrays.toString(outputNewWeight));
+            System.out.println();
+            //double[] inputs = new double[]{ (inObjDown/100) };
+            //double[] outputs = new double[]{ angle, (power/100) };
 
             trainingSet1.clear();
             gen++;

@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.bang.Bang;
 import com.bang.Bang2;
 import com.bang.Bang3;
+import com.bang.Bang4;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
@@ -12,10 +13,10 @@ public class DesktopLauncher {
 
 		config.width = 1350;//1123;
 		config.height = 540;
-		config.x = 1350;
-		config.y = 0;
+		config.x = 0;
+		config.y = 70;
 
-		new LwjglApplication(new Bang3(), config);
+		new LwjglApplication(new Bang4(), config);
 		//new LwjglApplication(new Giro(), config);
 	}
 }
