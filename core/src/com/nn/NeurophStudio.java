@@ -18,12 +18,14 @@ public class NeurophStudio {
     private String FileNetwork;
     private String PathDataSet;
     private String PathNetwork;
+    public NeuralNetwork nnetwork;
 
     public NeurophStudio(String pathDataSet, String pathNetwork, String pathDataSet1, String pathNetwork1) {
         FileDataSet = pathDataSet;
         FileNetwork = pathNetwork;
         PathDataSet = pathDataSet1;
         PathNetwork = pathNetwork1;
+        //nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
     }
 
     public double Perceptron(TransferFunctionType transferFunctionType, double[] inputs, double[] outputs){
@@ -68,9 +70,13 @@ public class NeurophStudio {
     }
 
     public void CreateMLP(int[] neuronsInLayers, String FileNetwork){
+        //nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
         MultiLayerPerceptron myMlPerceptron = new MultiLayerPerceptron(TransferFunctionType.SIGMOID, neuronsInLayers);
         myMlPerceptron.setLabel(FileNetwork);
         myMlPerceptron.save(PathNetwork + FileNetwork);
+
+        // Load NN
+        nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
     }
 
     public double[] MLP(DataSetRow dataRow, int[] neuronsInLayers, float maxError, float learnRate, String FileNetwork){
@@ -174,6 +180,18 @@ public class NeurophStudio {
         //System.out.println("Error: " + lr.getTotalNetworkError());
 
         return iterations;
+    }
+
+    public double[] TestX(double[] input){
+        nnetwork.setInput(input);
+        nnetwork.calculate();
+        //nnetwork.save(PathNetwork + FileNetwork);
+
+        double[] networkOutput = new double[input.length];
+        networkOutput = nnetwork.getOutput();
+        //System.out.println("Save on: " + PathNetwork + FileNetwork);
+
+        return networkOutput;
     }
 
     public double[] Test(String FileNetwork, double[] input){
@@ -315,8 +333,16 @@ public class NeurophStudio {
 
     public void setWeights(String FileNetwork, double[] weights){
         NeuralNetwork nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
         nnetwork.setWeights(weights);
         nnetwork.save(PathNetwork + "NewNeuralNetwork.nnet");
+    }
+
+    public void setWeightsX(double[] weights){
+        //NeuralNetwork nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        //nnetwork = NeuralNetwork.createFromFile(PathNetwork + FileNetwork);
+        nnetwork.setWeights(weights);
+        //nnetwork.save(PathNetwork + "NewNeuralNetwork.nnet");
     }
 
     public void setOutputs(String FileNetwork, double[] outputs){

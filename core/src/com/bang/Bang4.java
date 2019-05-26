@@ -21,9 +21,11 @@ import com.nn.NetworkUtils;
 import com.nn.NeurophStudio;
 
 import org.neuroph.core.data.DataSet;
-import org.neuroph.core.data.DataSetRow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 public class Bang4 extends ApplicationAdapter{
@@ -40,15 +42,9 @@ public class Bang4 extends ApplicationAdapter{
     int WIDTH;
     int HEIGHT;
 
-    // Time Elapsed
-    long start = 0;
-    long finish = 0;
-    float timeElapsed = 0;
-
     // AG
     int waveTotal = 3;
-    int wave = 0;
-    float best = 0.1f;
+    int wave = -1;
     int gen = 1;
 
     // Objects
@@ -58,28 +54,9 @@ public class Bang4 extends ApplicationAdapter{
     float power = 34.01906204223633000f;
     float targetX = 90;
     float targetY = 1;
-    float weight = 50;
-    float height = 0;
-    float percentsel = 0.5f;
-
-    float maxhight = 0;
-
-    int count = -1;
-    boolean shot = true;
-    double[] arrAngles = new double[waveTotal];
-    double[] arrPowers = new double[waveTotal];
-    double[] arrHight = new double[waveTotal];
-    double tx = 0;
-    double ty = 0;
-    double ang = 0;
+    float weight = 100;
 
     // Objects
-    //BodyDef bodyGroundDef;
-    //BodyDef bodyTargetDef;
-    //BodyDef bodyObjDef;
-    //BodyDef bodyLauncherDef;
-    //BodyDef bodyTowerDef;
-
     Body bodyObj;
     Body bodyLnchr;
     Body bodyTarget;
@@ -94,8 +71,6 @@ public class Bang4 extends ApplicationAdapter{
     String status;
 
     // NeuralNetwork
-    DataSet trainingSet1 = new DataSet(1, 2);
-    DataSet trainingSet2 = new DataSet(1, 2);
     String FileDataset = "DataSet.tset";
     String FileNetwork = "NewNeuralNetwork";
     String pathDataSet = "data/";
@@ -103,13 +78,28 @@ public class Bang4 extends ApplicationAdapter{
 
     NeurophStudio rna;
     NetworkUtils nnu;
-    boolean neural = false;
 
     boolean isCollideGround = false;
     boolean isCollideTarget = false;
     boolean test = false;
     double[][] rndWeights;
     int layers[] = new int[]{1, 6, 2};
+    int fitness = 1;
+    List lstTMPObjDown = new ArrayList();
+    double score = 999999999;
+    double[] bestweight = new double[26];
+
+    private void PanelInfo(){
+        batch.begin();
+        font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
+        font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
+        font1.draw(batch, "Target: " + targetX, 10, HEIGHT - 70);
+        font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
+        font1.draw(batch, "Wave: " + (wave) + "/" + waveTotal, 10, HEIGHT - 130);
+        font1.draw(batch, "Generation: " + gen, 10, HEIGHT - 160);
+
+        batch.end();
+    }
 
     @Override
     public void render() {
@@ -122,198 +112,81 @@ public class Bang4 extends ApplicationAdapter{
 
         bodyTarget.setTransform(targetX, targetY, 0);
 
-        if ( wave <= waveTotal && (isCollideGround || isCollideTarget) && !test) {
+        if ( wave < waveTotal && (isCollideGround || isCollideTarget) && !test) {
             if (!collide) {
                 collide = true;
 
-                TestWeights();
+                TestWeights2();
+
+                if(isCollideTarget){
+                    status = "Fitness " + fitness + "!!!";
+                    rna.setWeightsX(bestweight);
+                    wave = 0;
+                    waveTotal = 1;
+                }
             }
         }
 
         PanelInfo();
-
         world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
     }
 
-    private void TestWeights(){
-        if(wave < waveTotal) {
-            // Set Weights
-            rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-            //System.out.println(wave + ") " + Arrays.toString( rndWeights[wave] ));
+    private void TestWeights2(){
 
-            // Test Weights in shots
-            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX/100)});
-            angle = (float) outputNewWeight[0];
-            power = (float) outputNewWeight[1] * 100;
+        System.out.println(wave + ")  ObjDown: " + (bodyObj.getPosition().x / 100) + " Angle: " + angle + " Power: " + power + " Weights: " + Arrays.toString(rndWeights[wave]));
+        lstTMPObjDown.add(Math.abs(bodyObj.getPosition().x/100-0.9));
 
-            //System.out.println(Arrays.toString(rna.getWeights(FileNetwork + ".nnet")) + "\n");
+        wave++;
 
-            // DataSet
-            double[] inputs = new double[]{(bodyObj.getPosition().x/100)};
-            double[] outputs = new double[]{(angle), power};
-            trainingSet1.addRow(new DataSetRow(inputs, outputs));
-            System.out.println(wave + ") ObjDown: " + Arrays.toString(inputs) + " Angle: " + angle + " Power: " + power );
-
-            Shot(LauncherX, LauncherY, power, weight, angle);
-            wave++;
-        }else{
-            world.destroyBody(bodyObj);
+        if(wave == waveTotal) {
+            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             // Best shot and weights
-            System.out.println("\nBest shots generation");
-            trainingSet2.addRow(rna.MinValueSpace(trainingSet1, (targetX/100)));
-            double[][] rowWeights = new double[trainingSet2.getRows().size()][26];
-            for(int i=0; i<trainingSet1.getRows().size(); i++){
-                for(int j=0; j<trainingSet2.getRows().size(); j++){
-                    if(trainingSet1.getRows().get(i).getInput()[0] == trainingSet2.getRows().get(j).getInput()[0]){
-                        System.out.println(i + ")\n" + " Input: " + Arrays.toString(trainingSet2.getRows().get(j).getInput()) + " Output: " + Arrays.toString(trainingSet2.getRows().get(j).getDesiredOutput()) );
-                        System.out.println(" Weights: " + Arrays.toString(rndWeights[i]));
-                        rowWeights[j] = rndWeights[i];
+            System.out.println("Best shots generation (rowWeights) ### Score = " + score + " 1o. Weight = " + bestweight[0] + " ###");
+            Object minval = Collections.min(lstTMPObjDown);
+            int bestID = lstTMPObjDown.indexOf(minval);
+            double[] tmpWeight = new double[26];
 
-                        // Set Weights
-                        rna.setWeights(FileNetwork + ".nnet", rndWeights[i]);
-                        //System.out.println("Set weights: " + Arrays.toString( rowWeights[j] ));
-                    }
-                }
+            if(Math.abs(new Double(minval.toString())) < score) {
+                System.out.println("############################################ Record! ############################################ " +  Math.abs(new Double(minval.toString())) + " (" + score + ")");
+                score = Math.abs(new Double(minval.toString()));
+                bestweight = rndWeights[bestID];
+                tmpWeight = bestweight;
+                rna.setWeightsX(bestweight);
+            }else{
+                tmpWeight = rndWeights[bestID];
+                rna.setWeightsX(rndWeights[0]);
             }
-            System.out.println();
 
-            System.out.println("-----------------------------------------------------------------\n");
+            System.out.println(bestID +") " + Arrays.toString(rndWeights[bestID]));
+            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             // Clone weights
-            System.out.println("Clone " + waveTotal + " Best Weights");
-            rndWeights = CloneWeights(waveTotal,26, rowWeights, 0.05f);
+            System.out.println("Clone " + waveTotal + " Best Weights (rndWeights)");
+            rndWeights = CloneWeightsX(waveTotal, tmpWeight, 0.50);
+
             for(int i=0; i< rndWeights.length; i++) {
-                System.out.printf(Locale.US, "%02d)", i);
+                System.out.printf(Locale.US, "%01d)", i);
                 for (int j = 0; j < rndWeights[i].length; j++)
                     System.out.printf(Locale.US, " %20.17f", rndWeights[i][j]);
                 System.out.println();
             }
-            System.out.println();
 
-            // Test Weights in shots
-            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX/100)});
-            angle = (float) outputNewWeight[0];
-            power = (float) outputNewWeight[1] * 100;
-            Shot(LauncherX, LauncherY, power, weight, angle);
+            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("Shots generation " + (gen+1));
+            rna.setWeightsX(rndWeights[0]);
+            lstTMPObjDown.clear();
 
-            // Next generation
+            gen++;
             wave=0;
-            gen++;
-            //Gdx.app.exit();
-
-            trainingSet1.clear();
-            System.out.println("Shots generation " + gen);
-        }
-    }
-
-    private void TestWeights(float inObjDown, float inTargetX, boolean collideTarget){
-
-        if(wave < waveTotal) {
-
-            // Set Weights
-            rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-            System.out.printf(Locale.US, "%02d) ", wave);
-            for (int i = 0; i < rndWeights[wave].length; i++)
-                System.out.printf(Locale.US, "%20.17f ", rndWeights[wave][i]);
-            //System.out.println();
-
-            // Test input new values weights
-            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{inTargetX/100});
-            System.out.println(wave + ") Input: " + Arrays.toString(new double[]{inObjDown/100}) + " Output: " + Arrays.toString(outputNewWeight));
-            //System.out.println();
-
-            angle = (float) outputNewWeight[0];
-            power = (float) outputNewWeight[1] * 100;
-            double[] inputs = new double[]{(inObjDown / 100)};
-            double[] outputs = new double[]{angle, (power / 100)};
-
-            // DataSet
-            trainingSet1.addRow(new DataSetRow(inputs, outputs));
-
-            Shot(LauncherX, LauncherY, power, weight, angle);
         }
 
-        if(wave == waveTotal){
-            //for(int i=0; i<trainingSet1.getRows().size(); i++)
-            //    System.out.println(i + " " +
-            //            "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
-            //            " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
-            //    );
-            //System.out.println();
-
-            //for(int i=0; i<trainingSet1.getRows().size(); i++){
-            //    System.out.println(i + " " +
-            //            "Input: " + Arrays.toString(trainingSet1.getRows().get(i).getInput()) +
-            //            " Output: " + Arrays.toString(trainingSet1.getRows().get(i).getDesiredOutput())
-            //    );
-            //}
-            //System.out.println();
-
-            // Select best shots
-            //int maxi = 1; //Math.round(trainingSet1.getRows().size() * percentsel);
-            double limit = (inTargetX/100);
-
-            //trainingSet2 = rna.Best(trainingSet1, maxi, limit);
-            //System.out.println("\nMaxValue: " + rna.MaxValue(trainingSet1, limit) + "\n");
-            trainingSet2.addRow(rna.MinValueSpace(trainingSet1, limit));
-
-            double[][] rowWeights = new double[trainingSet2.getRows().size()][26];
-            System.out.println();
-            for(int i=0; i<trainingSet1.getRows().size(); i++){
-                for(int j=0; j<trainingSet2.getRows().size(); j++){
-                    if(trainingSet1.getRows().get(i).getInput()[0] == trainingSet2.getRows().get(j).getInput()[0]){
-                        System.out.println("Weights[" + i + "]: " + Arrays.toString(rndWeights[i]));
-                        System.out.println(i + ") " + "Input: " + Arrays.toString(trainingSet2.getRows().get(j).getInput()) + " Output: " + Arrays.toString(trainingSet2.getRows().get(j).getDesiredOutput()) );
-                        //System.out.println();
-                        rowWeights[j] = rndWeights[i];
-                    }
-                }
-            }
-            System.out.println();
-
-            //for(int i=0; i<trainingSet2.getRows().size(); i++){
-            //    System.out.println(i + " " + "Input: " + Arrays.toString(trainingSet2.getRows().get(i).getInput()) + " Output: " + Arrays.toString(trainingSet2.getRows().get(i).getDesiredOutput()) );
-            //}
-            //System.out.println();
-
-            // Clone weights
-            System.out.println("Clone");
-            rndWeights = CloneWeights(waveTotal,26, rowWeights, 0.05f);
-            for(int i=0; i< rndWeights.length; i++) {
-                System.out.printf(Locale.US, "%02d)", i);
-                for (int j = 0; j < rndWeights[i].length; j++)
-                    System.out.printf(Locale.US, " %20.17f", rndWeights[i][j]);
-                System.out.println();
-            }
-            System.out.println();
-
-            wave = 0;
-
-            // New shot
-            // Set Weights
-            System.out.println("Test shot");
-            System.out.printf(Locale.US, "%02d) ", wave);
-            rna.setWeights(FileNetwork + ".nnet", rndWeights[wave]);
-            for(int i=0; i<rndWeights[wave].length; i++)
-                System.out.printf(Locale.US, "%020.17f ", rndWeights[wave][i]);
-            System.out.println();
-            // Test input new values weights
-            double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX/100});
-            angle = (float) outputNewWeight[0];
-            power = (float) outputNewWeight[1] * 100;
-
-            System.out.println(wave + ") Input: " + Arrays.toString(new double[]{ inObjDown/100 }) + " Output: " + Arrays.toString(outputNewWeight));
-            System.out.println();
-            //double[] inputs = new double[]{ (inObjDown/100) };
-            //double[] outputs = new double[]{ angle, (power/100) };
-
-            trainingSet1.clear();
-            gen++;
-
-            Shot(LauncherX, LauncherY, 10, weight, 0.2f);
-            Gdx.app.exit();
-        }
+        rna.setWeightsX(rndWeights[wave]);
+        // Test Weights in shots
+        double[] outputNewWeight = rna.TestX(new double[]{(targetX / 100)});
+        angle = (float) outputNewWeight[0];
+        power = (float) outputNewWeight[1] * 100;
+        Shot(LauncherX, LauncherY, power, weight, angle);
     }
 
     @Override
@@ -326,6 +199,9 @@ public class Bang4 extends ApplicationAdapter{
         //if(WIDTH == 1123) {
         if(WIDTH == 1350) {
             // Desktop
+            //box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 6), (HEIGHT) / (PPM / 6) );
+            //box2DCamera.position.set(130, 73, 0);
+
             box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
             box2DCamera.position.set(70, 25, 0);
 
@@ -380,24 +256,26 @@ public class Bang4 extends ApplicationAdapter{
         rndWeights = RamdomWeights(waveTotal,26);
 
         // Start Shots
-        //double w[] = new double[]{-0.993506908416748, -0.1561880111694336, 0.591668963432312, 0.11798298358917236, -0.15057921409606934, 0.29571568965911865, -0.7706863880157471, -0.3437129259109497, 0.6637395620346069, -0.20272040367126465, -0.0038902759552001953, 0.9248113632202148, 0.23871541023254395, -0.15542709827423096, 0.7762361764907837, -0.46198081970214844, 0.8833752870559692, -0.12744832038879395, 0.4875059127807617, 0.0766441822052002, -0.4453543424606323, -0.6718043088912964, -0.9585974216461182, 0.7754673957824707, -0.9345780611038208, 0.7372944355010986};
-        //rna.setWeights(FileNetwork + ".nnet", w);
-        rna.setWeights(FileNetwork + ".nnet", rndWeights[0]);
+        //rna.setWeights(FileNetwork + ".nnet", rndWeights[0]);
+        rna.setWeightsX(rndWeights[0]);
 
-        double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX/100)});
+        //double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX/100)});
+        double[] outputNewWeight = rna.TestX(new double[]{(targetX/100)});
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;
         Shot(LauncherX, LauncherY, power, weight, angle);
 
-        System.out.println("Ramdom Weights");
+        System.out.println("Ramdom Weights (rndWeights)");
         for(int i=0; i< rndWeights.length; i++) {
-            System.out.printf(Locale.US, "%02d)", i);
+            System.out.printf(Locale.US, "%01d)", i);
             for (int j = 0; j < rndWeights[i].length; j++)
                 System.out.printf(Locale.US, " %20.17f", rndWeights[i][j]);
             System.out.println();
         }
-        System.out.println();
+
+        System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
         System.out.println("Shots generation " + gen);
+        wave = 0;
     }
 
     @Override
@@ -432,31 +310,75 @@ public class Bang4 extends ApplicationAdapter{
         return weights;
     }
 
-    private double[][] CloneWeights(int rows, int cols, double[][] rowWeights, double mut){
+    private double[][] CloneWeightsX(int wave, double[] rWeights, double mut) {
+        double[][] weights = new double[wave][rWeights.length];
+
+        for(int i=0; i<wave; i++)
+            weights[i] = rWeights;
+
+        for(int i=1; i<wave; i++) {
+            double[] row = new double[rWeights.length];
+            for (int j = 0; j<rWeights.length; j++)
+                if (Math.random() > mut)
+                    row[j] = rWeights[j];
+                else
+                    row[j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+                    //row[j] = rWeights[j];
+
+            weights[i] = row;
+        }
+
+        return weights;
+    }
+
+    private double[][] CloneWeights(int rows, int cols, double[][] rWeights, double mut){
         double[][] weights = new double[rows][cols];
 
-        for(int i=0; i<rows; i++) {
-            for (int j=0; j<cols; j++) {
-                //if(i==0){
-                //    weights[i][j] = rowWeights[0][j];
-                //}else{
-                    weights[i][j] = rowWeights[0][j];//nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
-                //}
-            }
-        }
+
 
         /*
-        for(int i=0; i<rows; i++) {
-            int p = nnu.RamdomValuesInt(rowWeights.length);
-            for (int j=0; j<cols; j++) {
-                if (Math.random() > mut) {
-                    weights[i][j] = rowWeights[p][j];
-                }else{
-                    weights[i][j] = rowWeights[p][j];//nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
-                }
-            }
-        }
+        for(int i=0; i<rows; i++)
+            if(rowWeights[0][0] == 0)
+                weights[i] = lastbest;
+            else
+                weights[i] = rowWeights[0];
         */
+
+        //for(int i=1; i<rows; i++)
+        //    for (int j=0; j<cols; j++)
+        //        if (Math.random() < mut)
+        //            //weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+        //            weights[i][j] = 0;
+
+
+        //for(int i=0; i<rows; i++) {
+        //    for (int j=0; j<cols; j++) {
+        //        if(rowWeights[0][j] == 0)
+        //            weights[i][j] = lastbest[j];
+        //        else
+        //            weights[i][j] = rowWeights[0][j];
+                /*
+                if(i==0){
+                    if(rowWeights[0][j] == 0) {
+                        //System.out.println("Erro");
+                        weights[i][j] = lastbest[j];
+                    }else {
+                        weights[i][j] = rowWeights[0][j];
+                    }
+                }else{
+                    //if (Math.random() < mut)
+                    //    weights[i][j] = rowWeights[0][j];
+                    //else
+                    if(rowWeights[0][j] == 0)
+                        weights[i][j] = lastbest[j];
+                    else
+                        weights[i][j] = rowWeights[0][j];
+                    //    weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
+                }
+                */
+            //}
+        //}
+
         return weights;
     }
 
@@ -507,37 +429,6 @@ public class Bang4 extends ApplicationAdapter{
                 collide = false;
             }
         }
-    }
-
-    private void PanelInfo(){
-        batch.begin();
-        font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
-        font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
-        font1.draw(batch, "Target: " + targetX, 10, HEIGHT - 70);
-        font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
-        font1.draw(batch, "Wave: " + (wave) + "/" + waveTotal, 10, HEIGHT - 130);
-        font1.draw(batch, "Generation: " + gen, 10, HEIGHT - 160);
-
-        for(int i=0; i<trainingSet1.getRows().size(); i++){
-            double maxObj = trainingSet1.getRows().get(i).getInput()[0];
-            //double maxVal = MaxValue(trainingSet1, (targetX/100) );
-            double maxVal = rna.MinValueSpace(trainingSet1, (targetX/100)).getInput()[0];
-
-            if( maxVal == maxObj)
-                font2.setColor(Color.RED);
-            else
-                font2.setColor(Color.WHITE);
-
-            font2.draw(batch, String.format(Locale.US,"%02d) %020.17f, %020.17f, %020.17f",
-                    i,
-                    trainingSet1.getRows().get(i).getInput()[0],
-                    trainingSet1.getRows().get(i).getDesiredOutput()[0],
-                    trainingSet1.getRows().get(i).getDesiredOutput()[1]),
-                    650, (HEIGHT - 10 - (i)*20)
-            );
-        }
-
-        batch.end();
     }
 
     private void BodyShot(float w, float h, float inpulseX, float inpulseY, float transformX, float transformY, float angle, float x, float y, float weight) {
