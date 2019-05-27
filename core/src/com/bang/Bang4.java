@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -19,8 +20,6 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.nn.NetworkUtils;
 import com.nn.NeurophStudio;
-
-import org.neuroph.core.data.DataSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +45,7 @@ public class Bang4 extends ApplicationAdapter{
     int waveTotal = 3;
     int wave = -1;
     int gen = 1;
+    double mut = 0.05;
 
     // Objects
     float angle = 01.10968124866485600f;
@@ -68,7 +68,7 @@ public class Bang4 extends ApplicationAdapter{
     SpriteBatch batch;
     BitmapFont font1;
     BitmapFont font2;
-    String status;
+    String status = "Trainnering...";
 
     // NeuralNetwork
     String FileDataset = "DataSet.tset";
@@ -84,19 +84,21 @@ public class Bang4 extends ApplicationAdapter{
     boolean test = false;
     double[][] rndWeights;
     int layers[] = new int[]{1, 6, 2};
-    int fitness = 1;
+    boolean fitness = false;
     List lstTMPObjDown = new ArrayList();
     double score = 999999999;
     double[] bestweight = new double[26];
+    float posmark = 9999999999f;
 
     private void PanelInfo(){
         batch.begin();
+
         font1.draw(batch, "Angle: " + angle, 10, HEIGHT - 10);
         font1.draw(batch, "Power: " + power, 10, HEIGHT - 40);
         font1.draw(batch, "Target: " + targetX, 10, HEIGHT - 70);
         font1.draw(batch, "Status: " + status, 10, HEIGHT - 100);
         font1.draw(batch, "Wave: " + (wave) + "/" + waveTotal, 10, HEIGHT - 130);
-        font1.draw(batch, "Generation: " + gen, 10, HEIGHT - 160);
+        font1.draw(batch, "Generations: " + gen, 10, HEIGHT - 160);
 
         batch.end();
     }
@@ -105,6 +107,7 @@ public class Bang4 extends ApplicationAdapter{
     public void render() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         debugRenderer.render(world, box2DCamera.combined);
+
         box2DCamera.update();
 
         isCollideGround = CollisionBox("ground", "shot");
@@ -112,14 +115,18 @@ public class Bang4 extends ApplicationAdapter{
 
         bodyTarget.setTransform(targetX, targetY, 0);
 
+        if(wave > 0)
+            status = "Learning...";
+
         if ( wave < waveTotal && (isCollideGround || isCollideTarget) && !test) {
             if (!collide) {
                 collide = true;
 
-                TestWeights2();
+                Trainner();
 
                 if(isCollideTarget){
-                    status = "Fitness " + fitness + "!!!";
+                    status = "Successful!!!";
+                    fitness = true;
                     rna.setWeightsX(bestweight);
                     wave = 0;
                     waveTotal = 1;
@@ -128,13 +135,16 @@ public class Bang4 extends ApplicationAdapter{
         }
 
         PanelInfo();
+
+        SquareMark(2,2, posmark, .3f);
+
         world.step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
     }
 
-    private void TestWeights2(){
-
+    private void Trainner(){
         System.out.println(wave + ")  ObjDown: " + (bodyObj.getPosition().x / 100) + " Angle: " + angle + " Power: " + power + " Weights: " + Arrays.toString(rndWeights[wave]));
         lstTMPObjDown.add(Math.abs(bodyObj.getPosition().x/100-0.9));
+        //posmark = bodyObj.getPosition().x;
 
         wave++;
 
@@ -144,12 +154,14 @@ public class Bang4 extends ApplicationAdapter{
             // Best shot and weights
             System.out.println("Best shots generation (rowWeights) ### Score = " + score + " 1o. Weight = " + bestweight[0] + " ###");
             Object minval = Collections.min(lstTMPObjDown);
+
             int bestID = lstTMPObjDown.indexOf(minval);
             double[] tmpWeight = new double[26];
 
             if(Math.abs(new Double(minval.toString())) < score) {
                 System.out.println("############################################ Record! ############################################ " +  Math.abs(new Double(minval.toString())) + " (" + score + ")");
                 score = Math.abs(new Double(minval.toString()));
+                posmark = Math.abs((new Float(minval.toString())-0.9f)*100);
                 bestweight = rndWeights[bestID];
                 tmpWeight = bestweight;
                 rna.setWeightsX(bestweight);
@@ -163,7 +175,7 @@ public class Bang4 extends ApplicationAdapter{
 
             // Clone weights
             System.out.println("Clone " + waveTotal + " Best Weights (rndWeights)");
-            rndWeights = CloneWeightsX(waveTotal, tmpWeight, 0.50);
+            rndWeights = CloneWeights(waveTotal, tmpWeight, mut);
 
             for(int i=0; i< rndWeights.length; i++) {
                 System.out.printf(Locale.US, "%01d)", i);
@@ -177,7 +189,9 @@ public class Bang4 extends ApplicationAdapter{
             rna.setWeightsX(rndWeights[0]);
             lstTMPObjDown.clear();
 
-            gen++;
+            if(!fitness)
+                gen++;
+
             wave=0;
         }
 
@@ -203,7 +217,7 @@ public class Bang4 extends ApplicationAdapter{
             //box2DCamera.position.set(130, 73, 0);
 
             box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
-            box2DCamera.position.set(70, 25, 0);
+            box2DCamera.position.set(70, 37.0f, 0);
 
             pathDataSet = "NeurophProject_Bang/Training Sets/";
             pathNetwork = "NeurophProject_Bang/Neural Networks/";
@@ -212,7 +226,7 @@ public class Bang4 extends ApplicationAdapter{
         }else{
             // Smartphone
             box2DCamera.setToOrtho(false, (WIDTH) / (PPM) + 10, (HEIGHT) / (PPM) + 10 );
-            box2DCamera.position.set(PPM*1.25f, PPM / 2 + 5, 0);
+            box2DCamera.position.set(PPM*1.25f+6, PPM / 2+7, 0);
 
             pathDataSet = "/data/data/com.bang/files/";
             pathNetwork = "/data/data/com.bang/files/";
@@ -310,7 +324,7 @@ public class Bang4 extends ApplicationAdapter{
         return weights;
     }
 
-    private double[][] CloneWeightsX(int wave, double[] rWeights, double mut) {
+    private double[][] CloneWeights(int wave, double[] rWeights, double mut) {
         double[][] weights = new double[wave][rWeights.length];
 
         for(int i=0; i<wave; i++)
@@ -331,55 +345,13 @@ public class Bang4 extends ApplicationAdapter{
         return weights;
     }
 
-    private double[][] CloneWeights(int rows, int cols, double[][] rWeights, double mut){
-        double[][] weights = new double[rows][cols];
-
-
-
-        /*
-        for(int i=0; i<rows; i++)
-            if(rowWeights[0][0] == 0)
-                weights[i] = lastbest;
-            else
-                weights[i] = rowWeights[0];
-        */
-
-        //for(int i=1; i<rows; i++)
-        //    for (int j=0; j<cols; j++)
-        //        if (Math.random() < mut)
-        //            //weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
-        //            weights[i][j] = 0;
-
-
-        //for(int i=0; i<rows; i++) {
-        //    for (int j=0; j<cols; j++) {
-        //        if(rowWeights[0][j] == 0)
-        //            weights[i][j] = lastbest[j];
-        //        else
-        //            weights[i][j] = rowWeights[0][j];
-                /*
-                if(i==0){
-                    if(rowWeights[0][j] == 0) {
-                        //System.out.println("Erro");
-                        weights[i][j] = lastbest[j];
-                    }else {
-                        weights[i][j] = rowWeights[0][j];
-                    }
-                }else{
-                    //if (Math.random() < mut)
-                    //    weights[i][j] = rowWeights[0][j];
-                    //else
-                    if(rowWeights[0][j] == 0)
-                        weights[i][j] = lastbest[j];
-                    else
-                        weights[i][j] = rowWeights[0][j];
-                    //    weights[i][j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
-                }
-                */
-            //}
-        //}
-
-        return weights;
+    private void SquareMark(float w, float h, float x, float y){
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setProjectionMatrix(box2DCamera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.DARK_GRAY);
+        shapeRenderer.rect(x-1, y-0.05f, w, h);
+        shapeRenderer.end();
     }
 
     private void Rotate(float x, float y, float axe, float ang){
@@ -571,20 +543,5 @@ public class Bang4 extends ApplicationAdapter{
             bodyGnd.setUserData("ground");
 
         shape.dispose();
-    }
-
-    public double MaxValue(DataSet trainingSet, float limit){
-        double row = 0;
-        double max = 0;
-
-        for(int i=0; i<trainingSet.getRows().size(); i++){
-            double col = trainingSet.getRows().get(i).getInput()[0];
-            if(col > max && col <= limit){
-                max = col;
-                row = trainingSet.getRows().get(i).getInput()[0];
-            }
-        }
-
-        return row;
     }
 }
