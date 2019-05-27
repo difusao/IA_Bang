@@ -213,8 +213,8 @@ public class Bang4 extends ApplicationAdapter{
         //if(WIDTH == 1123) {
         if(WIDTH == 1350) {
             // Desktop
-            //box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 6), (HEIGHT) / (PPM / 6) );
-            //box2DCamera.position.set(130, 73, 0);
+            //box2DCamera1.setToOrtho(false, (WIDTH) / (PPM / 6), (HEIGHT) / (PPM / 6) );
+            //box2DCamera1.position.set(130, 73, 0);
 
             box2DCamera.setToOrtho(false, (WIDTH) / (PPM / 3), (HEIGHT) / (PPM / 3) );
             box2DCamera.position.set(70, 37.0f, 0);
@@ -273,7 +273,7 @@ public class Bang4 extends ApplicationAdapter{
         //rna.setWeights(FileNetwork + ".nnet", rndWeights[0]);
         rna.setWeightsX(rndWeights[0]);
 
-        //double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX/100)});
+        //double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{(targetX1/100)});
         double[] outputNewWeight = rna.TestX(new double[]{(targetX/100)});
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;

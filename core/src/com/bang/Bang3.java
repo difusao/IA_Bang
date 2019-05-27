@@ -216,7 +216,7 @@ public class Bang3 extends ApplicationAdapter{
         double[] outputNewWeight = rna.Test(FileNetwork + ".nnet", new double[]{targetX/100});
         angle = (float) outputNewWeight[0];
         power = (float) outputNewWeight[1] * 100;
-        //System.out.println("Target:                      " + (targetX/100) );
+        //System.out.println("Target:                      " + (targetX1/100) );
         //System.out.println("First Shot TestW:           " + Arrays.toString(rndWeights[wave]));
         //System.out.println("First Shot outputNewWeight: " + Arrays.toString(outputNewWeight));
         Shot(LauncherX, LauncherY, power, weight, angle);
@@ -489,7 +489,7 @@ public class Bang3 extends ApplicationAdapter{
 
         for(int i=0; i<trainingSet1.getRows().size(); i++){
             double maxObj = trainingSet1.getRows().get(i).getInput()[0];
-            //double maxVal = MaxValue(trainingSet1, (targetX/100) );
+            //double maxVal = MaxValue(trainingSet1, (targetX1/100) );
             double maxVal = rna.MinValueSpace(trainingSet1, (targetX/100)).getInput()[0];
 
             if( maxVal == maxObj)

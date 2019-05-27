@@ -355,7 +355,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 		//start = System.currentTimeMillis();
 
-		// Order by best aprouch targetX.
+		// Order by best aprouch targetX1.
 		//System.out.println("\nOrder...");
 		//trainingSet1 = rna.Order(trainingSet1);
 		//for(int i=0; i<trainingSet1.getRows().size(); i++)
@@ -496,7 +496,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 			//Shot( LauncherX, LauncherY, power, weight, angle);
 
-			// Order by best aprouch targetX.
+			// Order by best aprouch targetX1.
 			//System.out.println("\nOrder...");
 			//trainingSet1 = rna.Order(trainingSet1);
 
@@ -598,7 +598,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 					// Test news weights
 					//double[] mlpWeights = rna.getWeights(FileNetwork + ".nnet");
-					//TrainnerWeightsNN(targetX, targetY, weight, height, angle, power, bodyObj.getPosition().x);
+					//TrainnerWeightsNN(targetX1, targetY, weight, height, angle, power, bodyObj.getPosition().x);
 				}else{
 					TrainnerNN(targetX, targetY, weight, height, angle, power, bodyObj.getPosition().x);
 
@@ -611,7 +611,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 					float inAngle = angle;
 					float inObjDown = bodyObj.getPosition().x;
 					float inPower = power;
-					float inTargetX = targetX;
+					float inTargetX = targetX1;
 					float inTargetY = targetY;
 					float inWeight = weight;
 					float inHight = height;
@@ -773,7 +773,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 			*/
             /**/
 			// Launcher
-			//double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (targetX / 100) });
+			//double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (targetX1 / 100) });
 			//System.out.println("Outputs: " + Arrays.toString(TestOutputs) + " ");
 
 			//angle = (float) TestOutputs[0];
@@ -1214,11 +1214,11 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public void render() {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		debugRenderer.render(world, box2DCamera.combined);
-		box2DCamera.update();
+		debugRenderer1.render(world, box2DCamera1.combined);
+		box2DCamera1.update();
 
-		// Position targetX
-		bodyTarget.setTransform(targetX, 1.0f, 0);
+		// Position targetX1
+		bodyTarget.setTransform(targetX1, 1.0f, 0);
 
 		if(bodyObj != null && bodyObj.getPosition().y > maxhight)
 			maxhight = bodyObj.getPosition().y;
@@ -1234,7 +1234,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 				float inAngle = angle;
 				float inObjDown = bodyObj.getPosition().x;
 				float inPower = power;
-				float inTarget = targetX;
+				float inTarget = targetX1;
 				float inWeight = weight;
 				float inHight = height;
 
@@ -1264,7 +1264,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 				float inAngle = angle;
 				float inObjDown = bodyObj.getPosition().x;
 				float inPower = power;
-				float inTarget = targetX;
+				float inTarget = targetX1;
 				float inWeight = weight;
 				float inHight = height;
 
@@ -1285,7 +1285,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 
 				wave++;
 
-				//System.out.printf(Locale.US,"Angle: %012.8f Power: %012.8f ObjDown: %012.8f Target: %012.8f%n", TestOutputs[0], (TestOutputs[1] * 100),  (inObjDown/100), (targetX/100));
+				//System.out.printf(Locale.US,"Angle: %012.8f Power: %012.8f ObjDown: %012.8f Target: %012.8f%n", TestOutputs[0], (TestOutputs[1] * 100),  (inObjDown/100), (targetX1/100));
 			}
 		}
 
@@ -1293,11 +1293,11 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 			if (!collide) {
 				collide = true;
 
-				//targetX = nnu.RamdomValues(50, 90);
+				//targetX1 = nnu.RamdomValues(50, 90);
 				PreTrainner(new int[]{1, 10, 2}, 0.001f,0.2f,0.7f,10000000);
 
 				// Launcher
-				double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (targetX / 100) });
+				double[] TestOutputs = rna.Test(FileNetwork + ".nnet", new double[]{ (targetX1 / 100) });
 
 				angle = (float) TestOutputs[0];
 				power = (float) TestOutputs[1] * 100;
@@ -1322,7 +1322,7 @@ public class Bang2 extends ApplicationAdapter implements InputProcessor {
 				float inAngle = angle;
 				float inObjDown = bodyObj.getPosition().x;
 				float inPower = power;
-				float inTarget = targetX;
+				float inTarget = targetX1;
 				float inWeight = weight;
 				float inHight = height;
 
