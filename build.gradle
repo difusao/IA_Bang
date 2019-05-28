@@ -1,11 +1,11 @@
 buildscript {
     repositories {
+        google()
         mavenLocal()
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         jcenter()
-        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.0'
@@ -27,10 +27,10 @@ allprojects {
     }
 
     repositories {
+        google()
         mavenLocal()
         mavenCentral()
         jcenter()
-        google()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }

@@ -10,8 +10,8 @@ public class DesktopLauncher {
 
 		config.width = 2246 / 2;
 		config.height = 1080 / 2;
-		config.x = 1300;
-		config.y = 0;//70;
+		config.x = 0;
+		config.y = 295;
 
 		new LwjglApplication(new Bang5(), config);
 		//new LwjglApplication(new Bang4(), config);

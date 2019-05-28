@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -19,29 +18,33 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.nn.NeuralNetWork;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Random;
 
 public class Bang5 implements ApplicationListener, InputProcessor {
 
     // Real World
-    public static final int PPM = 34;
     static final int VELOCITY_ITERATIONS = 6;
     static final int POSITION_ITERATIONS = 2;
 
-    // GA
-    int wavetotal = 10;
+    // GA & NN
+    int wavetotal = 3;
     int wave = 0;
     int gen = 0;
+    double mut = 0.05;
+    float[] lstObjDown = new float[wavetotal];
+    NeuralNetWork nn;
+    String pathDataSet;
+    String pathNetwork;
 
+    // World
     OrthographicCamera[] box2DCamera = new OrthographicCamera[wavetotal];
     Box2DDebugRenderer[] debugRenderer = new Box2DDebugRenderer[wavetotal];
-
     World[] world = new World[wavetotal];
-
     SpriteBatch batch;
-
     int WIDTH;
     int HEIGHT;
 
@@ -50,22 +53,27 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     Body[] bodyLnchr = new Body[wavetotal];
     Body[] bodyTarget = new Body[wavetotal];
     Body[] circle = new Body[wavetotal];
-
-    // Objects
     float[] angle = new float[wavetotal];
     float[] power = new float[wavetotal];
     float LauncherX = 5;
     float LauncherY = 2;
     float targetX = 100;
     float targetY = 1;
-    float weight = 20;
+    float weight = 50;
     boolean[] collide = new boolean[wavetotal];
 
-    // Form
+    // Panel info
     BitmapFont[] font1 = new BitmapFont[wavetotal];
 
-    boolean isCollideGround = false;
-    boolean isCollideTarget = false;
+    boolean[] isCollideGround = new boolean[wavetotal];
+    boolean[] isCollideTarget = new boolean[wavetotal];
+    int[] layers = new int[]{1, 6, 2};
+    int weightstotal = 26;
+    double[][] weights = new double[wavetotal][weightstotal];
+    double[][] weightsBest = new double[wavetotal][weightstotal];
+    double[] ObjDownBest = new double[wavetotal];
+
+    int count = 0;
 
     @Override
     public void create() {
@@ -74,15 +82,42 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
         batch = new SpriteBatch();
 
-        for(int i=0; i<wavetotal; i++){
-            angle[i] = RamdomValues(0.0f, 01.3f);
-            power[i] = RamdomValues(6.0f, 80.0f);
+        // NeuralNetwork
+        pathDataSet = "NeurophProject_Bang/Training Sets/DataSet/DataSet.tset";
+        pathNetwork = "NeurophProject_Bang/Neural Networks/NeuralNetwork.nnet";
+        nn = new NeuralNetWork(pathDataSet, pathNetwork);
 
+        // Create NeuralNetwork
+        nn.CreateMLP(layers);
+
+        // Load NeuralNetwork
+        nn.LoadMLP();
+
+        // Create ramdom weights for shots
+        for(int i=0; i<wavetotal; i++)
+            for(int j = 0; j< weightstotal; j++)
+                weights[i][j] = RamdomValues(-1.0000000000f, 1.0000000000f);
+
+        for(int i=0; i<wavetotal; i++){
+            // Get weights and set NeuralNetwork on items
+            for(int j = 0; j< weightstotal; j++) {
+                // Define weights for shots
+                nn.setWeights(weights[i]);
+
+                // Test NeuralNetwork
+                double[] output = nn.TestNN(new double[]{targetX/100});
+                angle[i] = (float) output[0];
+                power[i] = (float) output[1] * 100;
+            }
+
+            // Collide
             collide[i] = true;
+            isCollideGround[i] = false;
+            isCollideTarget[i] = false;
 
             box2DCamera[i] = new OrthographicCamera(WIDTH/10, HEIGHT/10);
-            box2DCamera[i].setToOrtho(false, WIDTH/10, HEIGHT/10);
-            box2DCamera[i].position.set(58.0f, 25.0f, 0.0f);
+            box2DCamera[i].setToOrtho(false, WIDTH/5, HEIGHT/5);
+            box2DCamera[i].position.set(110.0f, 53.0f, 0.0f);
             box2DCamera[i].update();
 
             world[i] = new World(new Vector2(0.0f,-9.8f),true);
@@ -96,7 +131,6 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             BodyBase(LauncherX, LauncherY, 2.0f, i);
             BodyGround(WIDTH, 0.0f, 0.0f, 0.0f, true, i);
             Rotate(LauncherX, LauncherY, 4.0f, angle[i], i);
-
             Shot(LauncherX, LauncherY, power[i], weight, angle[i], i);
 
             font1[i] = new BitmapFont(Gdx.files.internal("fonts/verdana10.fnt"));
@@ -104,7 +138,92 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             font1[i].getData().setScale(1.0f, 1.0f);
         }
 
+        TerminalLog();
+
         Gdx.input.setInputProcessor(this);
+    }
+
+    private void TerminalLog(){
+        System.out.println("WEIGHTS RAMDOMS ------------------------------------------------------");
+        for(int i=0; i<wavetotal; i++) {
+            System.out.printf(Locale.US, "%01d)", i);
+            for (int j = 0; j < weightstotal; j++)
+                System.out.printf(Locale.US, " %20.17f", weights[i][j]);
+            System.out.println();
+        }
+
+        System.out.println("OUTPUTS --------------------------------------------------------------");
+        for(int i=0; i<wavetotal; i++)
+            System.out.printf(Locale.US, "%01d) %20.17f %20.17f%n",i , angle[i], power[i]);
+        System.out.println("SHOTS ----------------------------------------------------------------");
+    }
+
+    private int BestObjDownID(float[] objsdown, float ref){
+        float v = 999999999;
+        int id = 0;
+
+        for(int i=0; i<objsdown.length; i++)
+            if(Math.abs(objsdown[i] - ref)< v) {
+                v = Math.abs(objsdown[i] - ref);
+                id = i;
+            }
+
+        return id;
+    }
+
+    private float BestObjDownValue(float[] objsdown, float ref){
+        float v = 999999999;
+        float value = 0.0f;
+
+        for(int i=0; i<objsdown.length; i++)
+            if(Math.abs(objsdown[i] - ref)< v) {
+                v = Math.abs(objsdown[i] - ref);
+                value = objsdown[i];
+            }
+
+        return value;
+    }
+
+    private void Trainner(int i){
+        lstObjDown[i] = bodyObj[i].getPosition().x;
+
+        //
+        if(collide[i] && count < wavetotal) {
+            System.out.printf(Locale.US, "%01d) %20.17f%n",i , lstObjDown[i]);
+            count++;
+        }
+
+        if(count == wavetotal) {
+            System.out.println("BEST SHOTS -----------------------------------------------------------");
+            System.out.printf(Locale.US, "%01d) %20.17f%n", BestObjDownID(lstObjDown, targetX), BestObjDownValue(lstObjDown, targetX));
+            System.out.printf(Locale.US, "%01d) %s%n", BestObjDownID(lstObjDown, targetX), Arrays.toString(weights[BestObjDownID(lstObjDown, targetX)]));
+            System.out.println("CLONE BEST WEIGHTS ---------------------------------------------------");
+            weights = CloneWeights(weights, mut);
+
+            for(int k=0; k<wavetotal; k++) {
+                System.out.printf(Locale.US, "%01d)", k);
+                for (int j = 0; j < weightstotal; j++)
+                    System.out.printf(Locale.US, " %20.17f", weights[k][j]);
+                System.out.println();
+            }
+        }
+    }
+
+    private double[][] CloneWeights(double[][] rWeights, double mut) {
+        double[][] weightsTMP = new double[rWeights.length][rWeights[0].length];
+
+        for(int i=0; i<rWeights.length; i++) {
+            double[] row = new double[rWeights[i].length];
+            for (int j=0; j<rWeights[i].length; j++)
+                if (Math.random() > mut)
+                    row[j] = rWeights[i][j];
+                else
+                    row[j] = RamdomValues(-1.0000000000f, 1.0000000000f);
+
+            weightsTMP[i] = row;
+        }
+
+        return weightsTMP;
     }
 
     @Override
@@ -115,44 +234,51 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             debugRenderer[i].render(world[i], box2DCamera[i].combined);
             box2DCamera[i].update();
 
-
-            isCollideGround = CollisionBox("ground", "shot", i);
-            isCollideTarget = CollisionBox("alvo", "shot", i);
+            isCollideGround[i] = CollisionBox("ground", "shot", i);
+            isCollideTarget[i] = CollisionBox("alvo", "shot", i);
 
             bodyTarget[i].setTransform(targetX, targetY, 0);
 
+            if ( (isCollideGround[i])) {
+                if (!collide[i]) {
+                    collide[i] = true;
 
+                    // Trainner
+                    Trainner(i);
+                }
+            }
+
+            if ( (isCollideTarget[i])) {
+                if (!collide[i]) {
+                    collide[i] = true;
+
+                    // Trainner
+                    Trainner(i);
+                }
+            }
 
             PanelScore(i);
+            //System.out.println("Best value: " + BestObjDownID(lstObjDown, targetX) + ") " + BestObjDownValue(lstObjDown, targetX));
 
             world[i].step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
         }
-
-        /*
-        if ( (isCollideGround)) {
-            if (!collide[id]) {
-                collide[id] = true;
-
-                //
-            }
-        }
-
-        if ( (isCollideTarget)) {
-            if (!collide[id]) {
-                collide[id] = true;
-
-                //
-            }
-        }
-        */
     }
 
     private void PanelScore(int i){
         batch.begin();
+
+        if(BestObjDownID(lstObjDown, targetX) == i)
+            font1[i].setColor(Color.GREEN);
+        else
+            font1[i].setColor(Color.WHITE);
+
         font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 10) - (i * 20));
         font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 140, (HEIGHT - 10) - (i * 20));
-        font1[i].draw(batch, " Distance: " + String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x), 270, (HEIGHT - 10) - (i * 20));
-        font1[i].draw(batch,String.valueOf(i) , bodyObj[i].getPosition().x*10-22, bodyObj[i].getPosition().y*10+23);
+        font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 270, (HEIGHT - 10) - (i * 20));
+        font1[i].setColor(Color.DARK_GRAY);
+        font1[i].draw(batch, String.valueOf(i) , bodyObj[i].getPosition().x*5+8, bodyObj[i].getPosition().y*5+23);
+        font1[i].draw(batch, String.format(Locale.US, "%01.0f", targetX) , targetX*5+8, targetY*5+23);
+
         batch.end();
     }
 
@@ -262,13 +388,13 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(w, h);
 
-        FixtureDef fixtureBallDef = new FixtureDef();
-        fixtureBallDef.density = weight;
-        fixtureBallDef.friction = 5.0f;
-        fixtureBallDef.restitution = 0.00f;
-        fixtureBallDef.shape = shape;
+        FixtureDef fixtureObjDef = new FixtureDef();
+        fixtureObjDef.density = weight;
+        fixtureObjDef.friction = 5.0f;
+        fixtureObjDef.restitution = 0.00f;
+        fixtureObjDef.shape = shape;
 
-        Fixture fixtureBall = bodyObj[id].createFixture(fixtureBallDef);
+        Fixture fixtureBall = bodyObj[id].createFixture(fixtureObjDef);
 
         bodyObj[id].setUserData("shot");
 
@@ -332,6 +458,26 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         Fixture fixtureTank = bodyLnchr[id].createFixture(fixtureDef1);
     }
 
+    private boolean CollisionBox(String a, String b, int id) {
+        boolean touch = false;
+
+        for (int i = 0; i < world[id].getContactCount(); i++) {
+            Contact contact = world[id].getContactList().get(i);
+
+            if (contact.isTouching()) {
+
+                Body contactA = contact.getFixtureA().getBody();
+                Body contactB = contact.getFixtureB().getBody();
+
+                if(contactA.getUserData().equals(a) && contactB.getUserData().equals(b)) {
+                    touch = true;
+                }
+            }
+        }
+
+        return touch;
+    }
+
     @Override
     public void resize(int width, int height) {
 
@@ -355,26 +501,6 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             font1[i].dispose();
     }
 
-    private boolean CollisionBox(String a, String b, int id) {
-        boolean touch = false;
-
-        for (int i = 0; i < world[id].getContactCount(); i++) {
-            Contact contact = world[id].getContactList().get(i);
-
-            if (contact.isTouching()) {
-
-                Body contactA = contact.getFixtureA().getBody();
-                Body contactB = contact.getFixtureB().getBody();
-
-                if(contactA.getUserData().equals(a) && contactB.getUserData().equals(b)) {
-                    touch = true;
-                }
-            }
-        }
-
-        return touch;
-    }
-
     @Override
     public boolean keyDown(int keycode) {
         return false;
@@ -393,10 +519,12 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
-        for(int i=0; i<wavetotal; i++) {
-            angle[i] = RamdomValues(0.0f, 01.3f);
-            power[i] = RamdomValues(6.0f, 80.0f);
+        count = 0;
 
+        for(int i=0; i<wavetotal; i++)
+            lstObjDown[i] = 0;
+
+        for(int i=0; i<wavetotal; i++) {
             Shot(LauncherX, LauncherY, power[i], weight, angle[i], i);
         }
 
