@@ -31,7 +31,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     static final int POSITION_ITERATIONS = 2;
 
     // GA & NN
-    int wavetotal = 10;
+    int wavetotal = 3;
     int wave = 0;
     int gen = 0;
     double mut = 0.05;
@@ -81,11 +81,47 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         WIDTH = Gdx.graphics.getWidth();
         HEIGHT = Gdx.graphics.getHeight();
 
+        float Box2DCamX;
+        float Box2DCamY;
+        float ViewportCamW;
+        float ViewportCamH;
+        float ViewportOrthoW;
+        float ViewportOrthoH;
+
+        float fontscaleX;
+        float fontscaleY;
+
         batch = new SpriteBatch();
 
-        // NeuralNetwork
-        pathDataSet = "NeurophProject_Bang/Training Sets/DataSet/DataSet.tset";
-        pathNetwork = "NeurophProject_Bang/Neural Networks/NeuralNetwork.nnet";
+        if(WIDTH == 1123) {
+            // NeuralNetwork
+            pathDataSet = "NeurophProject_Bang/Training Sets/DataSet/DataSet.tset";
+            pathNetwork = "NeurophProject_Bang/Neural Networks/NeuralNetwork.nnet";
+
+            Box2DCamX = WIDTH/5;
+            Box2DCamY = HEIGHT/5;
+            ViewportCamW = WIDTH/5;
+            ViewportCamH = HEIGHT/5;
+            ViewportOrthoW = 110.0f;
+            ViewportOrthoH = 53.0f;
+
+            fontscaleX = 1.0f;
+            fontscaleY = 1.0f;
+        }else {
+            // NeuralNetwork
+            pathDataSet = "/data/data/com.bang/files/DataSet.tset";
+            pathNetwork = "/data/data/com.bang/files/NeuralNetwork.nnet";
+
+            Box2DCamX = WIDTH/15;
+            Box2DCamY = HEIGHT/15;
+            ViewportCamW = WIDTH/15;
+            ViewportCamH = HEIGHT/15;
+            ViewportOrthoW = 73.0f;
+            ViewportOrthoH = 35.0f;
+
+            fontscaleX = 2.0f;
+            fontscaleY = 2.0f;
+        }
         nn = new NeuralNetWork(pathDataSet, pathNetwork);
 
         // Create NeuralNetwork
@@ -106,9 +142,9 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             isCollideGround[i] = false;
             isCollideTarget[i] = false;
 
-            box2DCamera[i] = new OrthographicCamera(WIDTH/10, HEIGHT/10);
-            box2DCamera[i].setToOrtho(false, WIDTH/5, HEIGHT/5);
-            box2DCamera[i].position.set(110.0f, 53.0f, 0.0f);
+            box2DCamera[i] = new OrthographicCamera(Box2DCamX, Box2DCamY);
+            box2DCamera[i].setToOrtho(false, ViewportCamW, ViewportCamH);
+            box2DCamera[i].position.set(ViewportOrthoW, ViewportOrthoH, 0.0f);
             box2DCamera[i].update();
 
             world[i] = new World(new Vector2(0.0f,-9.8f),true);
@@ -126,7 +162,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
             font1[i] = new BitmapFont(Gdx.files.internal("fonts/verdana10.fnt"));
             font1[i].setColor(Color.WHITE);
-            font1[i].getData().setScale(1.0f, 1.0f);
+            font1[i].getData().setScale(fontscaleX, fontscaleY);
         }
 
         TerminalLog();
@@ -192,21 +228,34 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             float bestValue =  BestObjDownValue(lstObjDown, targetX);
 
             // Compare with best general
-            //if( Math.abs(bestValue-targetX) < (Math.abs(ObjDownBest-targetX)) ){
-            //    ObjDownBest = bestValue;
-            //    weightsBest = weights[bestID];
-            //    weights = CloneWeights(weights[bestID], mut);
-            //}else {
-            //    weights = CloneWeights(weightsBest, mut);
-            //}
+            System.out.println();
+            System.out.println("bestValue - targetX = " + (bestValue-targetX) + " | ObjDownBest - targetX = " + (ObjDownBest-targetX));
+            System.out.println(bestValue + " - " + targetX + " = " + (bestValue-targetX) + " | " + ObjDownBest + " - " + targetX + " = " + (ObjDownBest-targetX));
+
+            if( Math.abs(bestValue-targetX) < (Math.abs(ObjDownBest-targetX)) && (Math.abs(ObjDownBest-targetX) > 0) ){
+                // Update best shots
+                ObjDownBest = bestValue;
+                weightsBest = weights[bestID];
+
+                // Clone best weights
+                weights = CloneWeights(weights[bestID], mut);
+
+                // Test all weights
+                TestNN();
+            }else {
+                weights = CloneWeights(weightsBest, mut);
+
+                // Test all weights
+                TestNN();
+            }
             System.out.println();
 
             System.out.println("BEST SHOTS -----------------------------------------------------------");
             System.out.printf(Locale.US, "%01d) %20.17f%n", bestID, bestValue);
-            System.out.printf(Locale.US, "%01d) %s%n", bestID, Arrays.toString(weights[bestID]));
+            System.out.printf(Locale.US, "%01d) %s%n", bestID, Arrays.toString(weights[0]));
             System.out.println();
-            //System.out.printf(Locale.US, "Best of the best shot: %20.17f%n", ObjDownBest);
-            //System.out.printf(Locale.US, "Best of the best weights: %s%n", Arrays.toString(weightsBest));
+            System.out.printf(Locale.US, "Best of the best shot: %20.17f%n", ObjDownBest);
+            System.out.printf(Locale.US, "Best of the best weights: %s%n", Arrays.toString(weightsBest));
             System.out.println();
 
             System.out.println("CLONE BEST WEIGHTS ---------------------------------------------------");
@@ -224,16 +273,18 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     private double[][] CloneWeights(double[] rWeights, double mut) {
         double[][] weightsTMP = new double[rWeights.length][rWeights.length];
 
-        weightsTMP[0] = weightsBest;
+        // Best weights in first row
+        weightsTMP[0] = rWeights;
 
+        // Clone left weights
         for(int i=1; i<rWeights.length; i++) {
             double[] row = new double[rWeights.length];
-            for (int j=0; j<rWeights.length; j++){
+            for (int j = 0; j < rWeights.length; j++) {
                 double rnd = Math.random();
                 if (rnd > mut)
                     row[j] = rWeights[j];
                 else
-                    row[j] = RamdomValues(-1.0000000000f, 1.0000000000f);
+                    row[j] = 1;//RamdomValues(-1.0000000000f, 1.0000000000f);
             }
 
             weightsTMP[i] = row;
@@ -292,26 +343,43 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
                     // Trainner
                     Trainner(i);
-                    //weights = CloneWeights(weightsBest, 0);
+
+                    // clone all best weights
+                    weights = CloneWeights(weightsBest, 1);
                     status = "Success!";
                 }
             }
 
-            PanelScore(i);
-            //System.out.println("Best value: " + BestObjDownID(lstObjDown, targetX) + ") " + BestObjDownValue(lstObjDown, targetX));
+            if(WIDTH == 1123)
+                PanelScoreDesktop(i);
+            else
+                PanelScoreAndroid(i);
 
             world[i].step(Gdx.graphics.getDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
         }
     }
 
-    private void PanelScore(int i){
+    private void PanelScoreDesktop(int i){
+        float targX;
+        float targY;
+        float objX;
+        float objY;
+        float corrX;
+        float corrY;
+
+        targX = targetX*5;
+        targY = targetY*5+25;
+        objX = 5;
+        objY = 5;
+        corrX = -1.7f;
+        corrY = 5.0f;
+
         batch.begin();
 
         font1[i].setColor(Color.WHITE);
-        font1[i].draw(batch, "Generation: " + String.format(Locale.US, "%03d", gen), 10, (HEIGHT - 10));
-        font1[i].draw(batch, "Status: " + status, 230, (HEIGHT - 10));
-        //font1[i].draw(batch, "Score: " + String.format(Locale.US, "%10.9f",ObjDownBest), 110, (HEIGHT - 10));
-
+        font1[i].draw(batch, "Gen: " + String.format(Locale.US, "%03d", gen), 33, (HEIGHT - 10));
+        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 145, (HEIGHT - 10));
+        font1[i].draw(batch, "Status: " + status, 285, (HEIGHT - 10));
 
         if(BestObjDownID(lstObjDown, targetX) == i)
             font1[i].setColor(Color.GREEN);
@@ -321,9 +389,48 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 30) - (i * 20));
         font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 140, (HEIGHT - 30) - (i * 20));
         font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 270, (HEIGHT - 30) - (i * 20));
-        font1[i].setColor(Color.DARK_GRAY);
-        font1[i].draw(batch, String.valueOf(i) , (bodyObj[i]!=null?bodyObj[i].getPosition().x*5+8:0), (bodyObj[i]!=null?bodyObj[i].getPosition().y*5+23:0));
-        font1[i].draw(batch, String.format(Locale.US, "%01.0f", targetX) , targetX*5+8, targetY*5+23);
+
+        font1[i].draw(batch, String.valueOf(i) , (bodyObj[i]!=null?(bodyObj[i].getPosition().x-corrX)*objX:0), (bodyObj[i]!=null?(bodyObj[i].getPosition().y+corrY)*objY:0));
+        font1[i].setColor(Color.YELLOW);
+        font1[i].draw(batch, String.format(Locale.US, "%01.0f", targetX) , targX, targY);
+
+        batch.end();
+    }
+
+    private void PanelScoreAndroid(int i){
+        float targX;
+        float targY;
+        float objX;
+        float objY;
+        float corrX;
+        float corrY;
+
+        targX = targetX*15-32;
+        targY = targetY*15+55;
+        objX = 15;
+        objY = 15;
+        corrX = 1.0f;
+        corrY = 4.0f;
+
+        batch.begin();
+
+        font1[i].setColor(Color.WHITE);
+        font1[i].draw(batch, "Generat:  " + String.format(Locale.US, "%03d", gen), 10, (HEIGHT - 30));
+        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 275, (HEIGHT - 30));
+        font1[i].draw(batch, "Status: " + status, 520, (HEIGHT - 30));
+
+        if(BestObjDownID(lstObjDown, targetX) == i)
+            font1[i].setColor(Color.GREEN);
+        else
+            font1[i].setColor(Color.WHITE);
+
+        font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 60) - (i * 30));
+        font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 265, (HEIGHT - 60) - (i * 30));
+        font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 510, (HEIGHT - 60) - (i * 30));
+
+        font1[i].draw(batch, String.valueOf(i) , (bodyObj[i]!=null?(bodyObj[i].getPosition().x-corrX)*objX:0), (bodyObj[i]!=null?(bodyObj[i].getPosition().y+corrY)*objY:0));
+        font1[i].setColor(Color.YELLOW);
+        font1[i].draw(batch, String.format(Locale.US, "%01.0f", targetX) , targX, targY);
 
         batch.end();
     }
