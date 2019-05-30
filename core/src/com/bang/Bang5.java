@@ -31,7 +31,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     static final int POSITION_ITERATIONS = 2;
 
     // GA & NN
-    int wavetotal = 3;
+    int wavetotal = 20;
     int wave = 0;
     int gen = 0;
     double mut = 0.05;
@@ -65,7 +65,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     float[] power = new float[wavetotal];
     float LauncherX = 5;
     float LauncherY = 2;
-    float targetX = 100;
+    float targetX = 150;
     float targetY = 1;
     float weight = 50;
     boolean[] collide = new boolean[wavetotal];
@@ -107,6 +107,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
             fontscaleX = 1.0f;
             fontscaleY = 1.0f;
+
+            targetX = 200;
         }else {
             // NeuralNetwork
             pathDataSet = "/data/data/com.bang/files/DataSet.tset";
@@ -121,6 +123,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
             fontscaleX = 2.0f;
             fontscaleY = 2.0f;
+
+            targetX = 150;
         }
         nn = new NeuralNetWork(pathDataSet, pathNetwork);
 
@@ -168,6 +172,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         TerminalLog();
 
         Gdx.input.setInputProcessor(this);
+
+        nn.SaveMLP();
     }
 
     private void TerminalLog(){
@@ -228,9 +234,9 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             float bestValue =  BestObjDownValue(lstObjDown, targetX);
 
             // Compare with best general
-            System.out.println();
-            System.out.println("bestValue - targetX = " + (bestValue-targetX) + " | ObjDownBest - targetX = " + (ObjDownBest-targetX));
-            System.out.println(bestValue + " - " + targetX + " = " + (bestValue-targetX) + " | " + ObjDownBest + " - " + targetX + " = " + (ObjDownBest-targetX));
+            //System.out.println();
+            //System.out.println("bestValue - targetX = " + (bestValue-targetX) + " | ObjDownBest - targetX = " + (ObjDownBest-targetX));
+            //System.out.println(bestValue + " - " + targetX + " = " + (bestValue-targetX) + " | " + ObjDownBest + " - " + targetX + " = " + (ObjDownBest-targetX));
 
             if( Math.abs(bestValue-targetX) < (Math.abs(ObjDownBest-targetX)) && (Math.abs(ObjDownBest-targetX) > 0) ){
                 // Update best shots
@@ -248,14 +254,14 @@ public class Bang5 implements ApplicationListener, InputProcessor {
                 // Test all weights
                 TestNN();
             }
-            System.out.println();
 
+            System.out.println();
             System.out.println("BEST SHOTS -----------------------------------------------------------");
             System.out.printf(Locale.US, "%01d) %20.17f%n", bestID, bestValue);
-            System.out.printf(Locale.US, "%01d) %s%n", bestID, Arrays.toString(weights[0]));
+            System.out.printf(Locale.US, "%01d) %s%n", bestID, Arrays.toString(weights[bestID]));
             System.out.println();
-            System.out.printf(Locale.US, "Best of the best shot: %20.17f%n", ObjDownBest);
-            System.out.printf(Locale.US, "Best of the best weights: %s%n", Arrays.toString(weightsBest));
+            System.out.printf(Locale.US, "Score shot: %20.17f%n", (ObjDownBest==999999999?0.0:ObjDownBest));
+            System.out.printf(Locale.US, "Score weights: %s%n", (ObjDownBest==999999999?0:Arrays.toString(weightsBest)));
             System.out.println();
 
             System.out.println("CLONE BEST WEIGHTS ---------------------------------------------------");
@@ -267,6 +273,22 @@ public class Bang5 implements ApplicationListener, InputProcessor {
                 System.out.println();
             }
             System.out.println();
+
+            // -------------------------------------------------------------------------------------
+            /*
+            count = 0;
+
+            TestNN();
+
+            for(int x=0; x<wavetotal; x++)
+                lstObjDown[x] = 0;
+
+            for(int x=0; x<wavetotal; x++) {
+                Shot(LauncherX, LauncherY, power[x], weight, angle[x], x);
+            }
+
+            gen++;
+            */
         }
     }
 
@@ -284,11 +306,13 @@ public class Bang5 implements ApplicationListener, InputProcessor {
                 if (rnd > mut)
                     row[j] = rWeights[j];
                 else
-                    row[j] = 1;//RamdomValues(-1.0000000000f, 1.0000000000f);
+                    row[j] = RamdomValues(-1.0000000000f, 1.0000000000f);
             }
 
             weightsTMP[i] = row;
         }
+
+
 
         return weightsTMP;
     }
@@ -309,10 +333,16 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     }
 
     private void WeightsRamdom(){
+
         // Create ramdom weights for shots
         for(int i=0; i<wavetotal; i++)
             for(int j = 0; j< weightstotal; j++)
                 weights[i][j] = RamdomValues(-1.0000000000f, 1.0000000000f);
+
+        //weights[0] =  new double[]{ -0.4463709592819214, 0.2449253797531128, -0.14493107795715332, -0.5159571170806885, -0.4090670347213745, -0.1841285228729248, -0.5661183595657349, -0.3934938907623291, -0.25599372386932373, -0.5934962034225464, -0.12035763263702393, 0.17912280559539795, -0.6707326173782349, 0.9899841547012329, -0.3817044496536255, 0.02834618091583252, 0.8339242935180664, -0.7566311359405518, -0.05399513244628906, -0.5518976449966431, 0.9628150463104248, -0.052072882652282715, 0.04367518424987793, 0.3512105941772461, -0.1395416259765625, -0.8761434555053711 };
+        //weights[1] =  new double[]{ -0.34687936305999756, -0.7705357074737549, -0.04880654811859131, 0.4655367136001587, 0.34830963611602783, -0.47219419479370117, -0.559154748916626, 0.36501479148864746, -0.7416129112243652, 0.3097078800201416, 0.49428486824035645, 0.10481154918670654, 0.2189873456954956, 0.3437645435333252, 0.5658566951751709, 0.18786346912384033, 0.782800555229187, 0.6564323902130127, -0.7282423973083496, -0.8264597654342651, -0.8296927213668823, -0.9665534496307373, -0.5727014541625977, 0.43430209159851074, 0.2939335107803345, 0.16794133186340332 };
+        //weights[2] =  new double[]{ 0.6304073333740234, 0.38968372344970703, -0.29929399490356445, 0.1691126823425293, 0.08539557456970215, -0.7208151817321777, -0.48671889305114746, -0.038854360580444336, -0.09654045104980469, -0.044333577156066895, -0.5532248020172119, -0.40785670280456543, 0.8765264749526978, 0.02179431915283203, 0.2530500888824463, 0.2506457567214966, -0.43646693229675293, -0.8606793880462646, 0.8073511123657227, -0.2561739683151245, -0.7836271524429321, -0.4089261293411255, -0.4318528175354004, 0.8324657678604126, -0.685043454170227, -0.433635950088501 };
+        //weights[2] =  new double[]{ -0.8251053094863892, 0.6633611917495728, -0.12159419059753418, -0.869695782661438, 0.09445083141326904, 0.8083107471466064, 0.018887639045715332, 0.907712459564209, 0.5822018384933472, 0.38585686683654785, -0.3244287967681885, 0.2829592227935791, -0.5728764533996582, 0.737586498260498, -0.39510416984558105, -0.23418796062469482, 0.8692783117294312, 0.3129338026046753, 0.6934159994125366, 0.058949828147888184, -0.04349362850189209, 0.4722421169281006, 0.1377427577972412, -0.7508710622787476, -0.9066689014434814, -0.3610299825668335 };
     }
 
     @Override
@@ -345,8 +375,11 @@ public class Bang5 implements ApplicationListener, InputProcessor {
                     Trainner(i);
 
                     // clone all best weights
-                    weights = CloneWeights(weightsBest, 1);
+                    //weights = CloneWeights(weightsBest, 0);
+                    for(int x=0; x<wavetotal; x++)
+                        weights[x] = weights[0];
                     status = "Success!";
+                    //targetX = RamdomValues(50f, 150.0f);
                 }
             }
 
