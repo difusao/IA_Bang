@@ -337,7 +337,6 @@ public class Bang4 extends ApplicationAdapter{
                     row[j] = rWeights[j];
                 else
                     row[j] = nnu.RamdomValues(-1.0000000000f, 1.0000000000f);
-                    //row[j] = rWeights[j];
 
             weights[i] = row;
         }

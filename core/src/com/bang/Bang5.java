@@ -31,7 +31,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     static final int POSITION_ITERATIONS = 2;
 
     // GA & NN
-    int wavetotal = 20;
+    int wavetotal = 30;
     int wave = 0;
     int gen = 0;
     double mut = 0.05;
@@ -39,10 +39,10 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     NeuralNetWork nn;
     String pathDataSet;
     String pathNetwork;
-    String status = "";
     int[] layers = new int[]{1, 6, 2};
     int weightstotal = 26;
     double[][] weights = new double[wavetotal][weightstotal];
+    double[][] weightsTMP = new double[wavetotal][weightstotal];
     double[] weightsBest = new double[weightstotal];
     double ObjDownBest = 999999999;
 
@@ -72,7 +72,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
     // Panel info
     BitmapFont[] font1 = new BitmapFont[wavetotal];
-
+    String status = "";
+    int contShotsOk = 0;
     boolean[] isCollideGround = new boolean[wavetotal];
     boolean[] isCollideTarget = new boolean[wavetotal];
 
@@ -124,7 +125,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             fontscaleX = 2.0f;
             fontscaleY = 2.0f;
 
-            targetX = 150;
+            targetX = 125;
         }
         nn = new NeuralNetWork(pathDataSet, pathNetwork);
 
@@ -179,17 +180,17 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     private void TerminalLog(){
         System.out.println("WEIGHTS RAMDOMS ------------------------------------------------------");
         for(int i=0; i<wavetotal; i++) {
-            System.out.printf(Locale.US, "%01d)", i);
+            System.out.printf(Locale.US, "%02d)", i);
             for (int j = 0; j < weightstotal; j++)
-                System.out.printf(Locale.US, " %20.17f", weights[i][j]);
+                System.out.printf(Locale.US, " %20.17f,", weights[i][j]);
             System.out.println();
         }
         System.out.println();
 
-        System.out.println("OUTPUTS --------------------------------------------------------------");
-        for(int i=0; i<wavetotal; i++)
-            System.out.printf(Locale.US, "%01d) %20.17f %20.17f%n",i , angle[i], power[i]);
-        System.out.println();
+        //System.out.println("OUTPUTS --------------------------------------------------------------");
+        //for(int i=0; i<wavetotal; i++)
+        //    System.out.printf(Locale.US, "%02d) %20.17f %20.17f%n",i , angle[i], power[i]);
+        //System.out.println();
 
         System.out.println("SHOTS ----------------------------------------------------------------");
     }
@@ -223,9 +224,14 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     private void Trainner(int i){
         lstObjDown[i] = bodyObj[i].getPosition().x;
 
-        //
+        if ( (isCollideTarget[i])) {
+            weightsTMP[contShotsOk] = weights[i];
+            contShotsOk++;
+            status = "Contact [" + (i+1) + "] of " + wavetotal;
+        }
+
         if(collide[i] && count < wavetotal) {
-            System.out.printf(Locale.US, "%01d) %20.17f%n",i , lstObjDown[i]);
+            System.out.printf(Locale.US, "%02d) %s %20.17f%n", i, ((isCollideTarget[i])?"[x]":"[ ]"), lstObjDown[i]);
             count++;
         }
 
@@ -233,86 +239,60 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             int bestID = BestObjDownID(lstObjDown, targetX);
             float bestValue =  BestObjDownValue(lstObjDown, targetX);
 
-            // Compare with best general
-            //System.out.println();
-            //System.out.println("bestValue - targetX = " + (bestValue-targetX) + " | ObjDownBest - targetX = " + (ObjDownBest-targetX));
-            //System.out.println(bestValue + " - " + targetX + " = " + (bestValue-targetX) + " | " + ObjDownBest + " - " + targetX + " = " + (ObjDownBest-targetX));
-
             if( Math.abs(bestValue-targetX) < (Math.abs(ObjDownBest-targetX)) && (Math.abs(ObjDownBest-targetX) > 0) ){
                 // Update best shots
                 ObjDownBest = bestValue;
                 weightsBest = weights[bestID];
-
-                // Clone best weights
-                weights = CloneWeights(weights[bestID], mut);
-
-                // Test all weights
-                TestNN();
-            }else {
-                weights = CloneWeights(weightsBest, mut);
-
-                // Test all weights
-                TestNN();
             }
 
-            System.out.println();
+            // update weights
+            weights = CloneWeights(weightsTMP, weights[bestID], mut);
+
             System.out.println("BEST SHOTS -----------------------------------------------------------");
-            System.out.printf(Locale.US, "%01d) %20.17f%n", bestID, bestValue);
-            System.out.printf(Locale.US, "%01d) %s%n", bestID, Arrays.toString(weights[bestID]));
+            System.out.printf(Locale.US, "%02d) %20.17f%n", bestID, bestValue);
+            System.out.printf(Locale.US, "%02d) %s%n", bestID, Arrays.toString(weightsBest));
             System.out.println();
             System.out.printf(Locale.US, "Score shot: %20.17f%n", (ObjDownBest==999999999?0.0:ObjDownBest));
             System.out.printf(Locale.US, "Score weights: %s%n", (ObjDownBest==999999999?0:Arrays.toString(weightsBest)));
             System.out.println();
 
             System.out.println("CLONE BEST WEIGHTS ---------------------------------------------------");
-
             for(int k=0; k<wavetotal; k++) {
-                System.out.printf(Locale.US, "%01d)", k);
+                System.out.printf(Locale.US, "%02d)", k);
                 for (int j = 0; j < weightstotal; j++)
                     System.out.printf(Locale.US, " %20.17f", weights[k][j]);
                 System.out.println();
             }
             System.out.println();
 
-            // -------------------------------------------------------------------------------------
-            /*
-            count = 0;
+            System.out.println("SHOTS ----------------------------------------------------------------");
 
-            TestNN();
-
-            for(int x=0; x<wavetotal; x++)
-                lstObjDown[x] = 0;
-
-            for(int x=0; x<wavetotal; x++) {
-                Shot(LauncherX, LauncherY, power[x], weight, angle[x], x);
-            }
-
-            gen++;
-            */
+            GoShot();
         }
     }
 
-    private double[][] CloneWeights(double[] rWeights, double mut) {
-        double[][] weightsTMP = new double[rWeights.length][rWeights.length];
+    private double[][] CloneWeights(double[][] rWeights, double[] weights, double mut) {
+        double[][] weightsTMP = new double[wavetotal][rWeights.length];
 
-        // Best weights in first row
-        weightsTMP[0] = rWeights;
+        // Add shots in target
+        System.out.println();
+        for(int i = 0; i < contShotsOk; i++)
+            weightsTMP[i] = rWeights[i];
 
         // Clone left weights
-        for(int i=1; i<rWeights.length; i++) {
-            double[] row = new double[rWeights.length];
-            for (int j = 0; j < rWeights.length; j++) {
+        for(int i = contShotsOk; i < wavetotal; i++) {
+            double[] row = new double[weights.length];
+
+            for (int j = 0; j < weights.length; j++) {
                 double rnd = Math.random();
                 if (rnd > mut)
-                    row[j] = rWeights[j];
+                    row[j] = weights[j];
                 else
                     row[j] = RamdomValues(-1.0000000000f, 1.0000000000f);
             }
 
             weightsTMP[i] = row;
         }
-
-
 
         return weightsTMP;
     }
@@ -333,16 +313,19 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     }
 
     private void WeightsRamdom(){
-
         // Create ramdom weights for shots
         for(int i=0; i<wavetotal; i++)
             for(int j = 0; j< weightstotal; j++)
                 weights[i][j] = RamdomValues(-1.0000000000f, 1.0000000000f);
 
-        //weights[0] =  new double[]{ -0.4463709592819214, 0.2449253797531128, -0.14493107795715332, -0.5159571170806885, -0.4090670347213745, -0.1841285228729248, -0.5661183595657349, -0.3934938907623291, -0.25599372386932373, -0.5934962034225464, -0.12035763263702393, 0.17912280559539795, -0.6707326173782349, 0.9899841547012329, -0.3817044496536255, 0.02834618091583252, 0.8339242935180664, -0.7566311359405518, -0.05399513244628906, -0.5518976449966431, 0.9628150463104248, -0.052072882652282715, 0.04367518424987793, 0.3512105941772461, -0.1395416259765625, -0.8761434555053711 };
-        //weights[1] =  new double[]{ -0.34687936305999756, -0.7705357074737549, -0.04880654811859131, 0.4655367136001587, 0.34830963611602783, -0.47219419479370117, -0.559154748916626, 0.36501479148864746, -0.7416129112243652, 0.3097078800201416, 0.49428486824035645, 0.10481154918670654, 0.2189873456954956, 0.3437645435333252, 0.5658566951751709, 0.18786346912384033, 0.782800555229187, 0.6564323902130127, -0.7282423973083496, -0.8264597654342651, -0.8296927213668823, -0.9665534496307373, -0.5727014541625977, 0.43430209159851074, 0.2939335107803345, 0.16794133186340332 };
-        //weights[2] =  new double[]{ 0.6304073333740234, 0.38968372344970703, -0.29929399490356445, 0.1691126823425293, 0.08539557456970215, -0.7208151817321777, -0.48671889305114746, -0.038854360580444336, -0.09654045104980469, -0.044333577156066895, -0.5532248020172119, -0.40785670280456543, 0.8765264749526978, 0.02179431915283203, 0.2530500888824463, 0.2506457567214966, -0.43646693229675293, -0.8606793880462646, 0.8073511123657227, -0.2561739683151245, -0.7836271524429321, -0.4089261293411255, -0.4318528175354004, 0.8324657678604126, -0.685043454170227, -0.433635950088501 };
-        //weights[2] =  new double[]{ -0.8251053094863892, 0.6633611917495728, -0.12159419059753418, -0.869695782661438, 0.09445083141326904, 0.8083107471466064, 0.018887639045715332, 0.907712459564209, 0.5822018384933472, 0.38585686683654785, -0.3244287967681885, 0.2829592227935791, -0.5728764533996582, 0.737586498260498, -0.39510416984558105, -0.23418796062469482, 0.8692783117294312, 0.3129338026046753, 0.6934159994125366, 0.058949828147888184, -0.04349362850189209, 0.4722421169281006, 0.1377427577972412, -0.7508710622787476, -0.9066689014434814, -0.3610299825668335 };
+        //for(int i=0; i<wavetotal; i++)
+        //    System.out.printf(Locale.US, "%02d) %s%n", i, Arrays.toString(weights[i]));
+
+        //for(int i=0; i<wavetotal; i++)
+            //weights[i] =  new double[]{  };
+            //weights[i] =  new double[]{ -0.516033411026001, 0.497334361076355, 0.5127986669540405, 0.06625854969024658, 0.25939440727233887, 0.5349220037460327, 0.3483976125717163, 0.8801760673522949, -0.3862677812576294, 0.012795329093933105, -0.523124098777771, -0.3990107774734497, 0.8353897333145142, -0.09325134754180908, -0.002365589141845703, -0.767318844795227, -0.4648704528808594, -0.13404035568237305, -0.8132435083389282, -0.06044185161590576, 0.9873210191726685, -0.8146086931228638, -0.6286664009094238, -0.7939869165420532, -0.28446531295776367, 0.4184170961380005 };
+            //weights[i] =  new double[]{ 0.4297689199447632, -0.06293034553527832, 0.40840625762939453, 0.01166534423828125, -0.5065199136734009, -0.5891550779342651, -0.6165467500686646, 0.9321153163909912, 0.3323153257369995, -0.8587610721588135, 0.20369112491607666, 0.48814094066619873, -0.494551420211792, -0.6173491477966309, -0.9936074018478394, 0.9305453300476074, -0.5579774379730225, 0.8062552213668823, -0.35338687896728516, 0.6824487447738647, -0.7807424068450928, -0.07200789451599121, 0.4872884750366211, -0.9437826871871948, 0.2532517910003662, -0.811790943145752 };
+            //weights[i] =  new double[]{ -0.5306599140167236, -0.944368839263916, 0.49415338039398193, 0.9817030429840088, 0.4562723636627197, 0.8086578845977783, -0.19939017295837402, -0.8012961149215698, 0.7533892393112183, 0.5949645042419434, -0.751994252204895, -0.0941230058670044, 0.6486148834228516, -0.5716716051101685, 0.45661818981170654, 0.9156582355499268, 0.40384674072265625, -0.1956801414489746, -0.7426458597183228, 0.25793421268463135, -0.35682547092437744, -0.594407320022583, -0.40703368186950684, 0.3741365671157837, 0.8117971420288086, -0.5331063270568848 };
     }
 
     @Override
@@ -373,13 +356,6 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
                     // Trainner
                     Trainner(i);
-
-                    // clone all best weights
-                    //weights = CloneWeights(weightsBest, 0);
-                    for(int x=0; x<wavetotal; x++)
-                        weights[x] = weights[0];
-                    status = "Success!";
-                    //targetX = RamdomValues(50f, 150.0f);
                 }
             }
 
@@ -449,8 +425,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
         font1[i].setColor(Color.WHITE);
         font1[i].draw(batch, "Generat:  " + String.format(Locale.US, "%03d", gen), 10, (HEIGHT - 30));
-        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 275, (HEIGHT - 30));
-        font1[i].draw(batch, "Status: " + status, 520, (HEIGHT - 30));
+        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 285, (HEIGHT - 30));
+        font1[i].draw(batch, "Status: " + status, 550, (HEIGHT - 30));
 
         if(BestObjDownID(lstObjDown, targetX) == i)
             font1[i].setColor(Color.GREEN);
@@ -458,8 +434,8 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             font1[i].setColor(Color.WHITE);
 
         font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 60) - (i * 30));
-        font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 265, (HEIGHT - 60) - (i * 30));
-        font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 510, (HEIGHT - 60) - (i * 30));
+        font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 275, (HEIGHT - 60) - (i * 30));
+        font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 520, (HEIGHT - 60) - (i * 30));
 
         font1[i].draw(batch, String.valueOf(i) , (bodyObj[i]!=null?(bodyObj[i].getPosition().x-corrX)*objX:0), (bodyObj[i]!=null?(bodyObj[i].getPosition().y+corrY)*objY:0));
         font1[i].setColor(Color.YELLOW);
@@ -505,6 +481,22 @@ public class Bang5 implements ApplicationListener, InputProcessor {
 
                 collide[id] = false;
             }
+    }
+
+    private void GoShot(){
+        contShotsOk = 0;
+        count = 0;
+
+        TestNN();
+
+        for(int i=0; i<wavetotal; i++)
+            lstObjDown[i] = 0;
+
+        for(int i=0; i<wavetotal; i++) {
+            Shot(LauncherX, LauncherY, power[i], weight, angle[i], i);
+        }
+
+        gen++;
     }
 
     private void Rotate(float x, float y, float axe, float ang, int id){
@@ -705,18 +697,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
-        count = 0;
-
-        TestNN();
-
-        for(int i=0; i<wavetotal; i++)
-            lstObjDown[i] = 0;
-
-        for(int i=0; i<wavetotal; i++) {
-            Shot(LauncherX, LauncherY, power[i], weight, angle[i], i);
-        }
-
-        gen++;
+        GoShot();
 
         return false;
     }
