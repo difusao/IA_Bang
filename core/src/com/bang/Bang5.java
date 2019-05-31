@@ -125,7 +125,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             fontscaleX = 2.0f;
             fontscaleY = 2.0f;
 
-            targetX = 125;
+            targetX = 130;
         }
         nn = new NeuralNetWork(pathDataSet, pathNetwork);
 
@@ -229,7 +229,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
             contShotsOk++;
 
             if(contShotsOk == wavetotal) {
-                targetX = RamdomValues(50, 200);
+                targetX = RamdomValues(50, 130);
                 gen = 1;
             }
         }
@@ -429,16 +429,16 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         batch.begin();
 
         font1[i].setColor(Color.WHITE);
-        font1[i].draw(batch, "Generat:  " + String.format(Locale.US, "%03d", gen), 10, (HEIGHT - 30));
+        font1[i].draw(batch, "Gen: " + String.format(Locale.US, "%03d", gen), 70, (HEIGHT - 30));
         font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 285, (HEIGHT - 30));
         font1[i].draw(batch, "Status: " + status, 550, (HEIGHT - 30));
 
         if(BestObjDownID(lstObjDown, targetX) == i)
             font1[i].setColor(Color.GREEN);
         else
-            font1[i].setColor(Color.WHITE);
+            font1[i].setColor(Color.GRAY);
 
-        font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 60) - (i * 30));
+        font1[i].draw(batch, String.format(Locale.US, "%02d",i ) + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 60) - (i * 30));
         font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 275, (HEIGHT - 60) - (i * 30));
         font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 520, (HEIGHT - 60) - (i * 30));
 
