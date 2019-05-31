@@ -31,7 +31,7 @@ public class Bang5 implements ApplicationListener, InputProcessor {
     static final int POSITION_ITERATIONS = 2;
 
     // GA & NN
-    int wavetotal = 30;
+    int wavetotal = 20;
     int wave = 0;
     int gen = 0;
     double mut = 0.05;
@@ -227,11 +227,16 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         if ( (isCollideTarget[i])) {
             weightsTMP[contShotsOk] = weights[i];
             contShotsOk++;
-            status = "Contact [" + (i+1) + "] of " + wavetotal;
+
+            if(contShotsOk == wavetotal) {
+                targetX = RamdomValues(50, 200);
+                gen = 1;
+            }
         }
 
         if(collide[i] && count < wavetotal) {
             System.out.printf(Locale.US, "%02d) %s %20.17f%n", i, ((isCollideTarget[i])?"[x]":"[ ]"), lstObjDown[i]);
+            status = "In target " + String.format(Locale.US, "%02d", contShotsOk) + " of " + wavetotal;
             count++;
         }
 
@@ -386,16 +391,16 @@ public class Bang5 implements ApplicationListener, InputProcessor {
         batch.begin();
 
         font1[i].setColor(Color.WHITE);
-        font1[i].draw(batch, "Gen: " + String.format(Locale.US, "%03d", gen), 33, (HEIGHT - 10));
-        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%10.8f",ObjDownBest)), 145, (HEIGHT - 10));
+        font1[i].draw(batch, "Gen: " + String.format(Locale.US, "%03d", gen), 40, (HEIGHT - 10));
+        font1[i].draw(batch, "Score: " + (ObjDownBest==999999999?0:String.format(Locale.US, "%9.7f",ObjDownBest)), 145, (HEIGHT - 10));
         font1[i].draw(batch, "Status: " + status, 285, (HEIGHT - 10));
 
         if(BestObjDownID(lstObjDown, targetX) == i)
             font1[i].setColor(Color.GREEN);
         else
-            font1[i].setColor(Color.WHITE);
+            font1[i].setColor(Color.DARK_GRAY);
 
-        font1[i].draw(batch, i + ") Angle: " + String.format(Locale.US, "%10.9f", angle[i]), 10, (HEIGHT - 30) - (i * 20));
+        font1[i].draw(batch, String.format(Locale.US, "%02d",i ) + ") Angle: " + String.format(Locale.US, "%9.8f", angle[i]), 10, (HEIGHT - 30) - (i * 20));
         font1[i].draw(batch, " Power: " + String.format(Locale.US, "%10.9f", power[i]), 140, (HEIGHT - 30) - (i * 20));
         font1[i].draw(batch, " Distance: " + (lstObjDown[i]==0&&bodyObj[i]!=null?String.format(Locale.US, "%10.9f", bodyObj[i].getPosition().x):String.format(Locale.US, "%10.9f", lstObjDown[i])), 270, (HEIGHT - 30) - (i * 20));
 
