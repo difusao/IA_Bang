@@ -8,6 +8,7 @@ public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 
+		config.title = "Bang Machine Learn";
 		config.width = 2246 / 2;
 		config.height = 1080 / 2;
 		config.x = 0;
