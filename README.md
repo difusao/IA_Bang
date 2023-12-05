@@ -32,4 +32,4 @@ Bang IA Neural Networks
 - 
 
 ## Credits
-- [Geovani José Malaquias](https://github.com/difusao)
+- [Difusão](https://github.com/difusao)
